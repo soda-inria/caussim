@@ -388,7 +388,7 @@ def run_causal_scores_eval(
         ax.set_ylim(ylims)
         figure_name = f"kendall_{m_ref}VS{m_comp}_pref_{best_metric_params[m_ref]}_pcomp_{best_metric_params[m_comp]}"
         plt.savefig(dir2extrapolation_plot / f"figure_name.png", bbox_inches="tight")
-        save_figure_to_folders(Path("heterogeneity") / xp_name, paper_dir=True)
+        save_figure_to_folders(Path("heterogeneity") / xp_name, figure_dir=True)
         plt.close()
 
     if extrapolation_plot:

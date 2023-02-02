@@ -413,6 +413,9 @@ def save_figure_to_folders(
     notes_dir=False,
     pdf=True,
 ):
+    if paper_dir and (not DIR2PAPER_IMG.is_dir()):
+        raise ValueError(f"{DIR2PAPER_IMG} is not a directory, specify a valid path to the paper images folder.")
+
     figure_name = Path(figure_name)
     reference_folder = figure_name.parents[0].stem
     if figure_dir:

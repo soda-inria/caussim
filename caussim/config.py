@@ -43,8 +43,6 @@ DIR2PAPER_IMG = (
     ROOT_DIR / "../papiers/papiers_matthieu/how_to_select_causal_models/images/"
 )
 
-if not DIR2PAPER_IMG.is_dir():
-    raise ValueError(f"{DIR2PAPER_IMG} is not a directory, specify a valid path to the paper images folder.")
 
 DIR2FIGURES = ROOT_DIR / "figures" 
 DIR2FIGURES.mkdir(exist_ok=True, parents=True)
