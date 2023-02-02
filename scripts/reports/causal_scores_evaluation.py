@@ -32,18 +32,6 @@ PAPER_EXPERIENCES = [
     (
         Path(
             DIR2EXPES
-            / "caussim_save"
-            / "caussim__stacked_regressor__test_size_5000__n_datasets_1000"
-        ),
-        False,
-        0.6,
-        (1e-2, 5 * 1e1),
-        (0, 1.05),
-        None,
-    ),
-    (
-        Path(
-            DIR2EXPES
             / "acic_2016_save"
             / "acic_2016__stacked_regressor__dgp_1-77__seed_1-10"
         ),
@@ -65,6 +53,18 @@ PAPER_EXPERIENCES = [
         (0, 1.05),
         None,
     ),
+    (
+        Path(
+            DIR2EXPES
+            / "caussim_save"
+            / "caussim__stacked_regressor__test_size_5000__n_datasets_1000"
+        ),
+        False,
+        0.6,
+        (1e-2, 5 * 1e1),
+        (0, 1.05),
+        None,
+    ),
 ]
 
 
@@ -80,7 +80,19 @@ PAPER_EXPERIENCES = mean_risk_xps_config
 @pytest.mark.parametrize(
     "xp_path, show_legend, quantile, ylim_bias_to_tau_risk, ylim_ranking, reference_metric",
     [
-        *PAPER_EXPERIENCES
+        #*PAPER_EXPERIENCES
+        (
+        Path(
+            DIR2EXPES
+            / "caussim_save"
+            / "caussim__stacked_regressor__test_size_5000__n_datasets_1000"
+        ),
+        False,
+        0.6,
+        (1e-2, 5 * 1e1),
+        (-1, 1),
+        "mean_risks",
+    ),
         # (Path(DIR2EXPES / "caussim_save"/
         # "caussim__linear_regressor__test_size_5000__n_datasets_1000"), True,
         # 0.6, (1e-2, 5e1), (0, 1.05), None), # Here, nuisances are learned with
@@ -120,10 +132,10 @@ def test_report_causal_scores_evaluation(
    
     dataset_name = expe_results["dataset_name"].values[0]
     # subsetting
-    subset_of_xp = expe_results["test_d_normalized_tv"].value_counts().index[:100]
-    expe_results = expe_results.loc[
-        expe_results["test_d_normalized_tv"].isin(subset_of_xp)
-    ]
+    # subset_of_xp = expe_results["test_d_normalized_tv"].value_counts().index[:100]
+    # expe_results = expe_results.loc[
+    #     expe_results["test_d_normalized_tv"].isin(subset_of_xp)
+    # ]
     xp_causal_metrics = [
         metric for metric in CAUSAL_METRICS if metric in expe_results.columns
     ]
@@ -132,14 +144,9 @@ def test_report_causal_scores_evaluation(
         xp_causal_metrics = [
             m for m in xp_causal_metrics if re.search("oracle|gold", m) is None
         ]
-
-        overlap_measure = "hat_d_normalized_tv"
-    else:
-        overlap_measure = "test_d_normalized_tv"
-    if dataset_name == "acic_2018":
         expe_results["test_d_normalized_tv"] = expe_results["hat_d_normalized_tv"]
     nuisance_models_label = get_nuisances_type(expe_results)
-    # ### Exclcude some runs with extrem values ### #
+    # ### Exclude some runs with extreme values ### #
     max_mse_ate = 1e5
     outliers_mask = expe_results["mse_ate"] >= max_mse_ate
     outliers = expe_results.loc[outliers_mask]

@@ -483,13 +483,8 @@ def get_candidate_params(xp_result: pd.DataFrame):
 
 def get_expe_indices(xp_result: pd.DataFrame):
     dataset_name = xp_result["dataset_name"].values[0]
-    xp_causal_metrics = [
-        metric for metric in CAUSAL_METRICS if metric in xp_result.columns
-    ]
     if dataset_name == "acic_2018":
-        xp_causal_metrics = [
-            m for m in xp_causal_metrics if re.search("oracle|gold", m) is None
-        ]
+        
         overlap_measure = "hat_d_normalized_tv"
     else:
         overlap_measure = "test_d_normalized_tv"

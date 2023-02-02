@@ -67,6 +67,10 @@ CAUSAL_METRIC_LABELS = {
     "tau_risk": r"$\widehat{\tau\mathrm{-risk}}(f)$",
     "oracle_upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*}(w, f) - \widehat{tau\mathrm{-risk}}(f) - 4 \sigma_{Bayes}^2$",
     "upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*}(w, f) - \widehat{tau\mathrm{-risk}}(f)$",
+    "oracle_u_risk": r"$\widehat{\mathrm{U-risk}}(f)$",
+    "u_risk": r"$\widehat{\mathrm{U-risk}}(f)$",
+    "oracle_w_risk": r"$\widehat{\mathrm{W-risk}}(f)$",
+    "w_risk": r"$\widehat{\mathrm{W-risk}}(f)$",
 }
 EVALUATION_METRIC_LABELS = {
     "normalized_abs_bias_ate": r"$|\frac{\tau - \tau_{\hat f^*_{\mathcal{M}}}}{\tau}|$",
@@ -80,7 +84,7 @@ EVALUATION_METRIC_LABELS = {
     "kendalltau_stats__ref_r_risk": r"""$\kappa (\ell, \tau\mathrm{{-Risk}}) -
                                      \kappa(\widehat{\mathrm{R-risk}}(f),
                                      \tau\mathrm{{-Risk}})$""",
-    "kendalltau_stats__ref_mean_risks": r"$\kappa(\ell,\tau\mathrm{{-Risk}})- \overline{\kappa(\ell, \tau\mathrm{{-Risk}})}$"
+    "kendalltau_stats__ref_mean_risks": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$"
 }
 
 METRIC_PALETTE = {
@@ -88,14 +92,18 @@ METRIC_PALETTE = {
     CAUSAL_METRIC_LABELS["mu_iptw_risk"]: TAB_COLORS[0],
     CAUSAL_METRIC_LABELS["mu_ipw_n_risk"]: TAB_COLORS[18],
     CAUSAL_METRIC_LABELS["r_risk"]: TAB_COLORS[2],
+    CAUSAL_METRIC_LABELS["u_risk"]: TAB_COLORS[4],
+    CAUSAL_METRIC_LABELS["w_risk"]: TAB_COLORS[8],
     CAUSAL_METRIC_LABELS["r_risk_gold_e"]: TAB_COLORS[16],
     CAUSAL_METRIC_LABELS["r_risk_gold_m"]: TAB_COLORS[7],
-    CAUSAL_METRIC_LABELS["r_risk_ipw"]: TAB_COLORS[4],
-    CAUSAL_METRIC_LABELS["r_risk_IS2"]: TAB_COLORS[8],
+    #CAUSAL_METRIC_LABELS["r_risk_ipw"]: TAB_COLORS[4],
+    #CAUSAL_METRIC_LABELS["r_risk_IS2"]: TAB_COLORS[8],
     CAUSAL_METRIC_LABELS["oracle_mu_iptw_risk"]: TAB_COLORS[0],
     CAUSAL_METRIC_LABELS["oracle_r_risk"]: TAB_COLORS[2],
-    CAUSAL_METRIC_LABELS["oracle_r_risk_ipw"]: TAB_COLORS[5],
-    CAUSAL_METRIC_LABELS["oracle_r_risk_IS2"]: TAB_COLORS[9],
+    CAUSAL_METRIC_LABELS["oracle_u_risk"]: TAB_COLORS[4],
+    CAUSAL_METRIC_LABELS["oracle_w_risk"]: TAB_COLORS[8],
+    #CAUSAL_METRIC_LABELS["oracle_r_risk_ipw"]: TAB_COLORS[5],
+    #CAUSAL_METRIC_LABELS["oracle_r_risk_IS2"]: TAB_COLORS[9],
     CAUSAL_METRIC_LABELS["tau_risk"]: TAB_COLORS[6],
 }
 METRIC_LS = {}
@@ -422,8 +430,8 @@ def plot_ranking_aggregation(
             
         for ranking_ in rankings_name:
             rankings_aggregation[ranking_] = (
-                rankings_aggregation[reference_ranking_name]
-                - rankings_aggregation[ranking_]
+                rankings_aggregation[ranking_]
+                - rankings_aggregation[reference_ranking_name]
             )
         evaluation_metric = aggregation_f_name + "__ref_" + reference_metric
     else:
