@@ -12,21 +12,33 @@ from sklearn.metrics import (
     brier_score_loss,
     f1_score,
 )
-from sklearn.utils import check_array, check_consistent_length
+from sklearn.utils import check_consistent_length
 
-# TODO: insert into estimation
-def ipw_score(y, a, hat_mu_0, hat_mu_1, hat_e, trimming=None):
+def ipw_risk(y, a, hat_y, hat_e, trimming=None):
     if trimming is not None:
         clipped_hat_e = np.clip(hat_e, trimming, 1 - trimming)
     else:
         clipped_hat_e = hat_e
     ipw_weights = a / clipped_hat_e + (1 - a) / (1 - clipped_hat_e)
-    hat_y = hat_mu_1 * a + hat_mu_0 * (1 - a)
-
     return np.sum(((y - hat_y) ** 2) * ipw_weights) / len(y)
 
+def r_risk(y, a, hat_m, hat_e, hat_tau):
+    
+    return np.mean(((y-hat_m) - (a - hat_e) * hat_tau)**2)
 
-def ipw_R_risk(y, a, hat_mu_0, hat_mu_1, hat_e, hat_m, trimming=None):
+def u_risk(y, a, hat_m, hat_e, hat_tau):
+    
+    return np.mean(((y-hat_m)/(a-hat_e) - hat_tau)**2)
+
+def w_risk(y, a,hat_e, hat_tau, trimming=None):
+    if trimming is not None:
+        clipped_hat_e = np.clip(hat_e, trimming, 1 - trimming)
+    else:
+        clipped_hat_e = hat_e
+    ipw_weights_squared = (a / clipped_hat_e + (1 - a) / (1 - clipped_hat_e))**2
+    return np.sum(((y - hat_tau) ** 2) * ipw_weights_squared) / len(y)
+
+def ipw_r_risk(y, a, hat_mu_0, hat_mu_1, hat_e, hat_m, trimming=None):
     if trimming is not None:
         clipped_hat_e = np.clip(hat_e, trimming, 1 - trimming)
     else:
@@ -36,11 +48,9 @@ def ipw_R_risk(y, a, hat_mu_0, hat_mu_1, hat_e, hat_m, trimming=None):
 
     return np.sum((((y - hat_m) - (a - hat_e) * (hat_tau)) ** 2) * ipw_weights) / len(y)
 
-
-def ipw_R_risk_oracle(y, a, hat_mu_0, hat_mu_1, e, mu_1, mu_0):
+def ipw_r_risk_oracle(y, a, hat_mu_0, hat_mu_1, e, mu_1, mu_0):
     m = mu_0 * (1 - e) + mu_1 * e
-    return ipw_R_risk(y=y, a=a, hat_mu_0=hat_mu_0, hat_mu_1=hat_mu_1, hat_e=e, hat_m=m)
-
+    return ipw_r_risk(y=y, a=a, hat_mu_0=hat_mu_0, hat_mu_1=hat_mu_1, hat_e=e, hat_m=m)
 
 # ### metrics Utils ### #
 

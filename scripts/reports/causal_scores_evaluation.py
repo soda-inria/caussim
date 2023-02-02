@@ -70,21 +70,26 @@ PAPER_EXPERIENCES = [
     "xp_path, show_legend, quantile, ylim_bias_to_tau_risk, ylim_ranking, reference_metric",
     [
         #*PAPER_EXPERIENCES
-        (Path(DIR2EXPES / "caussim_save"/ "caussim__linear_regressor__test_size_5000__n_datasets_1000"), True, 0.6, (1e-2, 5e1), (0, 1.05), None), # Here, nuisances are learned with ridge regressor, which yielsd poor performance of the selection procedure.
-        (Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"), False, 0.6, (1e-2, 5*1e1), (0, 1.05), None), # a balanced treatment ratio xp with 900 instances and 4 seeds; it shows that different seeds for response surfaces are crucial to draw robust conclusion.
-        # separated train and nuisances sets
-        # (
-        #     Path(
-        #         DIR2EXPES
-        #         / "caussim_save"
-        #         / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"
-        #     ),
-        #     False,
-        #     0.6,
-        #     (1e-2, 5 * 1e1),
-        #     (0, 1.05),
-        #     None,
-        # )
+        # (Path(DIR2EXPES / "caussim_save"/
+        # "caussim__linear_regressor__test_size_5000__n_datasets_1000"), True,
+        # 0.6, (1e-2, 5e1), (0, 1.05), None), # Here, nuisances are learned with
+        # ridge regressor, which yielsd poor performance of the selection
+        # procedure.
+        #(Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"), False, 0.6, (1e-2, 5*1e1), (0, 1.05), None), # a 
+        # (Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"), False, 0.6, (1e-2, 5*1e1), (0, 1.05), None), # a balanced treatment ratio xp with 900 instances and 4 seeds; it shows that different seeds for response surfaces are crucial to draw robust conclusion.
+        #separated train and nuisances sets
+        (
+            Path(
+                DIR2EXPES
+                / "caussim_save"
+                / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"
+            ),
+            False,
+            0.6,
+            (1e-2, 5 * 1e1),
+            (0, 1.05),
+            None,
+        )
     ],
 )
 def test_report_causal_scores_evaluation(
@@ -101,6 +106,7 @@ def test_report_causal_scores_evaluation(
     BEST_ESTIMATOR_PLOT = True
 
     expe_results, _ = read_logs(xp_path)
+   
     dataset_name = expe_results["dataset_name"].values[0]
     xp_causal_metrics = [
         metric for metric in CAUSAL_METRICS if metric in expe_results.columns

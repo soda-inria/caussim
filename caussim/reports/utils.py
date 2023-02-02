@@ -448,3 +448,65 @@ def save_figure_to_folders(
                 str(DIR2NOTES / reference_folder / f"{figure_name.name}.pdf"),
                 bbox_inches="tight",
             )
+
+# Utils that wrap the different configurations between semi-simulated datasets
+# for plotting.
+def get_candidate_params(xp_result: pd.DataFrame):
+    
+    if "cate_candidate_model" in xp_result.columns:
+        candidate_estimator = (
+            xp_result["cate_candidate_model"].iloc[0].lower().replace("()", "")
+        )
+    else:
+        # legacy of old result format (only for caussim extensive results)
+        candidate_estimator = "ridge"
+    if candidate_estimator == "ridge":
+        candidate_params = [
+            "final_estimator__alpha",
+            "meta_learner_name",
+            "featurizer__random_state",
+        ]
+    elif candidate_estimator == "hist_gradient_boosting":
+        candidate_params = [
+            "final_estimator__learning_rate",
+            "meta_learner_name",
+            "final_estimator__max_leaf_nodes",
+        ]
+    else:
+        raise ValueError(
+            f"Expected one of ridge or hist_gradient_boosting for final_estimator, got {candidate_estimator}"
+        )
+    return candidate_params
+
+def get_expe_indices(xp_result: pd.DataFrame):
+    dataset_name = xp_result["dataset_name"].values[0]
+    if dataset_name == "acic_2018":
+        xp_causal_metrics = [
+            m for m in xp_causal_metrics if re.search("oracle|gold", m) is None
+        ]
+        overlap_measure = "hat_d_normalized_tv"
+    else:
+        overlap_measure = "test_d_normalized_tv"
+    if dataset_name == "acic_2016":
+        if (
+            len(
+                {"simulation_seed", "simulation_param"}.intersection(
+                    set(xp_result.columns)
+                )
+            )
+            == 2
+        ):
+            expe_indices = ["simulation_seed", "simulation_param"]
+        else:
+            expe_indices = ["seed", "dgp"]
+    elif dataset_name == "acic_2018":
+        expe_indices = ["ufid"]
+    elif dataset_name == "twins":
+        expe_indices = ["random_state", "overlap"]
+    elif dataset_name == "caussim":
+        expe_indices = ["test_seed"]
+
+    expe_indices += [
+        overlap_measure,
+    ]
+    return overlap_measure, expe_indices

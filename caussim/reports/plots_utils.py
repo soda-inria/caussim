@@ -420,7 +420,7 @@ def plot_ranking_aggregation(
         evaluation_metric = aggregation_f_name
 
     var_name = "causal_metric"
-    # TODO assert instead of if/raise
+    
     if x_metric_name not in expe_indices:
         raise ValueError("Metric of interest (x variable) should be in expe_indices.")
     rankings_aggregation_melted = rankings_aggregation.melt(

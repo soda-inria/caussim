@@ -15,7 +15,7 @@ from caussim.estimation.estimators import (
     CateEstimator,
     get_meta_learner_components,
 )
-from caussim.estimation.scores import brier_skill_score
+from caussim.estimation.scores import brier_skill_score, ipw_risk, r_risk, u_risk, w_risk
 from caussim.pdistances.mmd import normalized_total_variation, total_variation_distance
 
 
@@ -132,89 +132,54 @@ def get_selection_metrics(causal_df: CausalDf, predictions: pd.DataFrame) -> Dic
         np.abs(df["mu_1"] - df["mu_0"]) * np.abs(2 * df["e"] - 1)
     )
 
-    # Feasibles
-    hat_y = predictions["hat_mu_1"] * df["a"] + predictions["hat_mu_0"] * (1 - df["a"])
+    y = df["y"]
+    a = df["a"]
+    e = df["e"]
     # Directly from the R-decomposition
     oracle_m = df["mu_0"] * (1 - df["e"]) + df["mu_1"] * df["e"]
-
-    simulation_scores["r2"] = r2_score(df["y"], hat_y)
-
-    simulation_scores["mu_risk"] = mean_squared_error(df["y"], hat_y, squared=True)
-    # IPWs
-    oracle_ipw_weights = df["a"] / df["e"] + (1 - df["a"]) / (1 - df["e"])
-    simulation_scores["oracle_IPW_max"] = np.max(oracle_ipw_weights)
-
-    simulation_scores["oracle_mu_iptw_risk"] = np.sum(
-        ((df["y"] - hat_y) ** 2) * oracle_ipw_weights, axis=0
-    ) / len(hat_y)
-
-    check_ipw_weights = df["a"] / predictions["check_e"] + (1 - df["a"]) / (
-        1 - predictions["check_e"]
-    )
+    hat_mu_1 = predictions["hat_mu_1"]
+    hat_mu_0 = predictions["hat_mu_0"]
+    hat_tau = predictions["hat_tau"]
+    hat_y = hat_mu_1 * a + hat_mu_0 * (1 - a)
+    check_e = predictions["check_e"]
+    check_m = predictions["check_m"]
+    # Feasibles
+    ## Simple mse
+    simulation_scores["r2"] = r2_score(y, hat_y)
+    simulation_scores["mu_risk"] = mean_squared_error(y, hat_y, squared=True)
+    
+    ## ipws    
+    check_ipw_weights = a /check_e + (1 - a) / (1 - check_e)
     simulation_scores["IPW_max"] = np.max(check_ipw_weights)
-    simulation_scores["mu_iptw_risk"] = np.sum(
-        ((df["y"] - hat_y) ** 2) * (check_ipw_weights), axis=0
-    ) / len(hat_y)
-
-    check_e_probabilities = predictions["check_e"] * df["a"] + (
-        1 - predictions["check_e"]
-    ) * (1 - df["a"])
-    # IPW-N : population_thres
+    simulation_scores["mu_iptw_risk"] = ipw_risk(y=y, a=a, hat_y=hat_y, hat_e=check_e)
+    oracle_ipw_weights = a / e + (1 - a) / (1 - e)
+    simulation_scores["oracle_IPW_max"] = np.max(oracle_ipw_weights)
+    simulation_scores["oracle_mu_iptw_risk"] = ipw_risk(y=y, a=a, hat_y=hat_y, hat_e=e)
+    ### IPW-N : population_thres
+    check_e_probabilities = check_e * a + (1 - check_e) * (1 - a)
     check_e_probabilities_n = np.clip(check_e_probabilities, 1 / len(hat_y), 1)
-    simulation_scores["ipw_n_max"] = np.max(1 / check_e_probabilities_n)
-    simulation_scores["mu_ipw_n_risk"] = np.sum(
-        ((df["y"] - hat_y) ** 2) / (check_e_probabilities_n), axis=0
-    ) / len(hat_y)
-    # R risk
-    simulation_scores["oracle_r_risk"] = np.sum(
-        ((df["y"] - oracle_m) - (df["a"] - df["e"]) * predictions["hat_tau"]) ** 2
-    ) / len(hat_y)
+    check_e_weigths_n = 1 / check_e_probabilities_n
+    simulation_scores["ipw_n_max"] = np.max(check_e_weigths_n)
+    simulation_scores["mu_ipw_n_risk"] = ipw_risk(y=y,a=a, hat_y=hat_y, hat_e=check_e_weigths_n)
+
+    # R-risks
+    simulation_scores["oracle_r_risk"] = r_risk(y=y,a=a, hat_m=oracle_m, hat_e=e, hat_tau=hat_tau)
     simulation_scores["oracle_r_risk_rewritten"] = np.sum(
-        df["e"] * (1 - df["e"]) * (test_oracles["cate"] - predictions["hat_tau"]) ** 2
-    ) / len(hat_y)
-    simulation_scores["r_risk"] = np.sum(
-        (
-            (df["y"] - predictions["check_m"])
-            - (df["a"] - predictions["check_e"]) * predictions["hat_tau"]
-        )
-        ** 2
-    ) / len(hat_y)
-    simulation_scores["r_risk_gold_e"] = np.sum(
-        (
-            (df["y"] - predictions["check_m"])
-            - (df["a"] - df["e"]) * predictions["hat_tau"]
-        )
-        ** 2
-    ) / len(hat_y)
+        e * (1 - e) * (test_oracles["cate"] - hat_tau) ** 2
+    ) / len(hat_tau)
+    simulation_scores["r_risk"] = r_risk(y=y,a=a,hat_m=check_m, hat_e=check_e,hat_tau=hat_tau)
+    simulation_scores["r_risk_gold_e"] = r_risk(y=y,a=a,hat_m=check_m, hat_e=e,hat_tau=hat_tau)
+    simulation_scores["r_risk_gold_m"] = r_risk(y=y,a=a,hat_m=oracle_m, hat_e=check_e,hat_tau=hat_tau)
 
-    simulation_scores["r_risk_gold_m"] = np.sum(
-        (
-            (df["y"] - oracle_m)
-            - (df["a"] - predictions["check_e"]) * predictions["hat_tau"]
-        )
-        ** 2
-    ) / len(hat_y)
-
-    simulation_scores["oracle_r_risk_ipw"] = np.sum(
-        oracle_ipw_weights
-        * ((df["y"] - oracle_m) - (df["a"] - df["e"]) * predictions["hat_tau"]) ** 2
-    ) / len(hat_y)
-
-    simulation_scores["r_risk_ipw"] = np.sum(
-        check_ipw_weights
-        * (
-            (df["y"] - predictions["check_m"])
-            - (df["a"] - predictions["check_e"]) * predictions["hat_tau"]
-        )
-        ** 2
-    ) / len(hat_y)
-    # Rrisk IS2
-    simulation_scores["oracle_r_risk_IS2"] = (
-        simulation_scores["oracle_r_risk_ipw"] + 2 * simulation_scores["oracle_r_risk"]
-    )
-    simulation_scores["r_risk_IS2"] = (
-        simulation_scores["r_risk_ipw"] + 2 * simulation_scores["r_risk"]
-    )
+    # u_risk
+    simulation_scores["u_risk"] = u_risk(y=y,a=a,hat_m=check_m, hat_e=check_e,hat_tau=hat_tau)
+    simulation_scores["oracle_u_risk"] = u_risk(y=y,a=a,hat_m=oracle_m, hat_e=e,hat_tau=hat_tau)
+    
+    # w_risk 
+    simulation_scores["w_risk"] = w_risk(y=y,a=a, hat_e=check_e,hat_tau=hat_tau)
+    simulation_scores["oracle_w_risk"] = w_risk(y=y,a=a, hat_e=e,hat_tau=hat_tau)
+    
+    
     # Metrics for nuisances
     simulation_scores["check_e_bss"] = brier_skill_score(
         df["a"], predictions["check_e"]

@@ -38,12 +38,12 @@ generator = check_random_state(RANDOM_STATE)
 
 DATASET_GRID = [
     # {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 11))}
-    # {
-    #     "dataset_name": ["caussim"],
-    #     "overlap": generator.uniform(0, 2.5, size=100),
-    #     "random_state": list(range(1, 4)),
-    #     "treatment_ratio": [0.25, 0.5, 0.75],
-    # }
+    {
+        "dataset_name": ["caussim"],
+        "overlap": generator.uniform(0, 2.5, size=100),
+        "random_state": list(range(1, 4)),
+        "treatment_ratio": [0.25, 0.5, 0.75],
+    }
     # {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] == 5000, "ufid"].values},
     # {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 6))},
     # {"dataset_name": ["caussim"], "overlap": generator.uniform(0, 2.5, size=100), "random_state":list(range(1, 11))}
@@ -57,7 +57,7 @@ DATASET_GRID = [
     #     "nuisance_set_size": [2500],
     # }
 ]
-DATASET_GRID = DATASET_GRID_FULL_EXPES
+# DATASET_GRID = DATASET_GRID_FULL_EXPES
 
 
 # ### Evaluate several dgps ### #
