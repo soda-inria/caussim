@@ -77,7 +77,10 @@ EVALUATION_METRIC_LABELS = {
     "kendalltau_stats": r"""Kendall rank correlation 
     $\kappa (\ell, \tau\mathrm{-Risk})$""",
     "kendalltau_stats__ref_oracle_r_risk": r"""$\kappa (\ell, \tau\mathrm{-Risk}) - \kappa(\widehat{R\mathrm{-risk}}^*(f), \tau\mathrm{-Risk})$""",
-    "kendalltau_stats__ref_r_risk": r"""$\kappa (\ell, \tau\mathrm{{-Risk}}) - \kappa(\widehat{\mathrm{R-risk}}(f), \tau\mathrm{{-Risk}})$""",
+    "kendalltau_stats__ref_r_risk": r"""$\kappa (\ell, \tau\mathrm{{-Risk}}) -
+                                     \kappa(\widehat{\mathrm{R-risk}}(f),
+                                     \tau\mathrm{{-Risk}})$""",
+    "kendalltau_stats__ref_mean_risks": r"$\kappa(\ell,\tau\mathrm{{-Risk}})- \overline{\kappa(\ell, \tau\mathrm{{-Risk}})}$"
 }
 
 METRIC_PALETTE = {
@@ -184,6 +187,7 @@ def plot_evaluation_metric(
         "scatter_only",
         "nonparametric_quantile",
     ]
+    
     if evaluation_metric in [
         "normalized_bias_tau_risk_to_best_method",
         kendalltau_stats.__name__,
@@ -408,8 +412,14 @@ def plot_ranking_aggregation(
     ]
     if reference_metric is not None:
         reference_ranking_name = f"{aggregation_f_name}__tau_risk_{reference_metric}"
-        selection_metrics.remove(reference_metric)
-        rankings_name.remove(reference_ranking_name)
+        if reference_metric in selection_metrics:
+            selection_metrics.remove(reference_metric)
+            rankings_name.remove(reference_ranking_name)
+        elif reference_metric == "mean_risks":
+            rankings_aggregation[reference_ranking_name] = rankings_aggregation[rankings_name].mean(axis=1)
+        else: 
+            raise ValueError(f"reference_metric should be in {selection_metrics} or 'mean_risks', got {reference_metric}")
+            
         for ranking_ in rankings_name:
             rankings_aggregation[ranking_] = (
                 rankings_aggregation[reference_ranking_name]
@@ -436,6 +446,7 @@ def plot_ranking_aggregation(
             )
         }
     )
+    
     ax = plot_evaluation_metric(
         comparison_df_w_best_as_oracle=rankings_aggregation_melted,
         evaluation_metric=evaluation_metric,

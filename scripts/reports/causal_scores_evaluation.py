@@ -11,6 +11,8 @@ from caussim.reports import (
     read_logs,
     save_figure_to_folders,
     get_nuisances_type,
+    get_candidate_params,
+    get_expe_indices
 )
 from caussim.reports.plots_utils import (
     CAUSAL_METRICS,
@@ -66,10 +68,19 @@ PAPER_EXPERIENCES = [
 ]
 
 
+mean_risk_xps_config = []
+for xp_tupple in PAPER_EXPERIENCES:
+    xp_tupple_ = list(xp_tupple)
+    xp_tupple_[-1] = "mean_risks"
+    xp_tupple_[-2] = (-1, 1)
+    mean_risk_xps_config.append(tuple(xp_tupple_))
+PAPER_EXPERIENCES = mean_risk_xps_config
+
+
 @pytest.mark.parametrize(
     "xp_path, show_legend, quantile, ylim_bias_to_tau_risk, ylim_ranking, reference_metric",
     [
-        #*PAPER_EXPERIENCES
+        *PAPER_EXPERIENCES
         # (Path(DIR2EXPES / "caussim_save"/
         # "caussim__linear_regressor__test_size_5000__n_datasets_1000"), True,
         # 0.6, (1e-2, 5e1), (0, 1.05), None), # Here, nuisances are learned with
@@ -78,18 +89,18 @@ PAPER_EXPERIENCES = [
         #(Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"), False, 0.6, (1e-2, 5*1e1), (0, 1.05), None), # a 
         # (Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"), False, 0.6, (1e-2, 5*1e1), (0, 1.05), None), # a balanced treatment ratio xp with 900 instances and 4 seeds; it shows that different seeds for response surfaces are crucial to draw robust conclusion.
         #separated train and nuisances sets
-        (
-            Path(
-                DIR2EXPES
-                / "caussim_save"
-                / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"
-            ),
-            False,
-            0.6,
-            (1e-2, 5 * 1e1),
-            (0, 1.05),
-            None,
-        )
+        # (
+        #     Path(
+        #         DIR2EXPES
+        #         / "caussim_save"
+        #         / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"
+        #     ),
+        #     False,
+        #     0.6,
+        #     (1e-2, 5 * 1e1),
+        #     (-1, 1.05),
+        #     "mean_risks",
+        # )
     ],
 )
 def test_report_causal_scores_evaluation(
@@ -103,14 +114,20 @@ def test_report_causal_scores_evaluation(
     # parameter to select what to be plotted:
     HTY_PLOT = False
     RANKING_COMPUTE = True
-    BEST_ESTIMATOR_PLOT = True
+    BEST_ESTIMATOR_PLOT = False
 
     expe_results, _ = read_logs(xp_path)
    
     dataset_name = expe_results["dataset_name"].values[0]
+    # subsetting
+    subset_of_xp = expe_results["test_d_normalized_tv"].value_counts().index[:100]
+    expe_results = expe_results.loc[
+        expe_results["test_d_normalized_tv"].isin(subset_of_xp)
+    ]
     xp_causal_metrics = [
         metric for metric in CAUSAL_METRICS if metric in expe_results.columns
     ]
+
     if dataset_name == "acic_2018":
         xp_causal_metrics = [
             m for m in xp_causal_metrics if re.search("oracle|gold", m) is None
@@ -128,53 +145,9 @@ def test_report_causal_scores_evaluation(
     outliers = expe_results.loc[outliers_mask]
     expe_results = expe_results.loc[~outliers_mask]
     logging.warning(f"Removing {outliers_mask.sum()} with mse_ate>{max_mse_ate}")
-    if "cate_candidate_model" in expe_results.columns:
-        candidate_estimator = (
-            expe_results["cate_candidate_model"].iloc[0].lower().replace("()", "")
-        )
-    else:
-        # legacy of old result format (only for caussim extensive results)
-        candidate_estimator = "ridge"
-
-    # TODO: extract to a util
-    if candidate_estimator == "ridge":
-        candidate_params = [
-            "final_estimator__alpha",
-            "meta_learner_name",
-            "featurizer__random_state",
-        ]
-    elif candidate_estimator == "hist_gradient_boosting":
-        candidate_params = [
-            "final_estimator__learning_rate",
-            "meta_learner_name",
-            "final_estimator__max_leaf_nodes",
-        ]
-    else:
-        raise ValueError(
-            f"Expected one of ridge or hist_gradient_boosting for final_estimator, got {candidate_estimator}"
-        )
-    if dataset_name == "acic_2016":
-        if (
-            len(
-                {"simulation_seed", "simulation_param"}.intersection(
-                    set(expe_results.columns)
-                )
-            )
-            == 2
-        ):
-            expe_indices = ["simulation_seed", "simulation_param"]
-        else:
-            expe_indices = ["seed", "dgp"]
-    elif dataset_name == "acic_2018":
-        expe_indices = ["ufid"]
-    elif dataset_name == "twins":
-        expe_indices = ["random_state", "overlap"]
-    elif dataset_name == "caussim":
-        expe_indices = ["test_seed"]
-
-    expe_indices += [
-        overlap_measure,
-    ]
+    candidate_params = get_candidate_params(expe_results)
+    overlap_measure, expe_indices = get_expe_indices(expe_results)
+    
     if HTY_PLOT:
         expe_indices += [
             "log_treatment_heterogeneity_norm",
@@ -320,7 +293,7 @@ def test_report_causal_scores_evaluation(
                         paper_dir=False,
                     )
         if reference_metric is not None:
-            ylim_ranking = (ylim_ranking[0] - ylim_ranking[1], ylim_ranking[1])
+            #ylim_ranking = (ylim_ranking[0] - ylim_ranking[1], ylim_ranking[1])
             ref_metric_str = f"_ref_metric_{reference_metric}"
         else:
             ref_metric_str = ""

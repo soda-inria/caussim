@@ -395,9 +395,9 @@ def get_nuisances_type(df):
         nuisance_estimator_col = "y_estimator"
         if "y_estimator" not in df.columns:
             return "linear"
-
+    
     if (
-        re.search(non_linearmodels_regex, df[nuisance_estimator_col][0].strip().lower())
+        re.search(non_linearmodels_regex, df[nuisance_estimator_col].iloc[0].strip().lower())
         is not None
     ):
         model_label = "non linear"
@@ -483,6 +483,9 @@ def get_candidate_params(xp_result: pd.DataFrame):
 
 def get_expe_indices(xp_result: pd.DataFrame):
     dataset_name = xp_result["dataset_name"].values[0]
+    xp_causal_metrics = [
+        metric for metric in CAUSAL_METRICS if metric in xp_result.columns
+    ]
     if dataset_name == "acic_2018":
         xp_causal_metrics = [
             m for m in xp_causal_metrics if re.search("oracle|gold", m) is None
