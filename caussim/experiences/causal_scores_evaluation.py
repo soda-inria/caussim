@@ -91,7 +91,7 @@ def run_causal_scores_eval(
     if dataset_name != "caussim":
         df_nuisance_set, df_test_ = train_test_split(
             dgp_sample.df,
-            test_size=cate_config["train_ratio"],
+            train_size=cate_config["train_ratio"],
             random_state=cate_config["rs_train_split"],
         )
         if cate_config.get("separate_train_set_ratio", 0) != 0:
@@ -112,7 +112,6 @@ def run_causal_scores_eval(
         # semi-simulated dataset.
         sim.rs_gaussian = dataset_config["test_seed"] + 1
         df_nuisance_set = sim.sample(num_samples=dataset_config["train_size"]).df
-        
         if cate_config.get("separate_train_set_ratio", 0) != 0:
             separate_train_set_size = int(dataset_config["test_size"] * cate_config["separate_train_set_ratio"])
             sim.rs_gaussian = dataset_config["train_seed"]

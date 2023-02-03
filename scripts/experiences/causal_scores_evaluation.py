@@ -33,20 +33,21 @@ generator = check_random_state(RANDOM_STATE)
 
 
 DATASET_GRID = [
-    # {
-    #     "dataset_name": ["caussim"],
-    #     "overlap": generator.uniform(0, 2.5, size=100),
-    #     "random_state": list(range(1, 4)),
-    #     "treatment_ratio": [0.25, 0.5, 0.75],
-    # }
      {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(10))},
     {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] <=5000, "ufid"].values},
     {"dataset_name": ["acic_2016"], "overlap": list(range(1, 78)),"random_state": list(range(1, 11))},
+    {
+        "dataset_name": ["caussim"],
+        "overlap": generator.uniform(0, 2.5, size=100),
+        "random_state": list(range(1, 4)),
+        "treatment_ratio": [0.25, 0.5, 0.75],
+    }
 ]
 #DATASET_GRID = DATASET_GRID_FULL_EXPES
 
-# add a parameter for three sets estimation
-CATE_CONFIG_ENSEMBLE_NUISANCES["nuisance_ratio"] = 0.5
+# Fixing this parameter to non 0 separate the test set into a train set and a
+# test distinct from the nuisance set (kept to the same size)
+CATE_CONFIG_ENSEMBLE_NUISANCES["separate_train_set_ratio"] = 0.5
 
 # ### Evaluate several dgps ### #
 if __name__ == "__main__":
