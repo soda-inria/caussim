@@ -88,50 +88,50 @@ def run_causal_scores_eval(
     )
     # Load a dgp
     sim, dgp_sample = load_dataset(dataset_config=dataset_config)
-    # Only for testing
-    if test is True:
-        dgp_sample.df = dgp_sample.df.sample(n=100, random_state=0)
     if dataset_name != "caussim":
         df_nuisance_set, df_test_ = train_test_split(
             dgp_sample.df,
-            test_size=cate_config["test_ratio"],
-            random_state=cate_config["rs_test_split"],
+            test_size=cate_config["train_ratio"],
+            random_state=cate_config["rs_train_split"],
         )
-        if "nuisance_set_ratio" in cate_config.keys():
+        if cate_config.get("separate_train_set_ratio", 0) != 0:
             df_train, df_test = train_test_split(
                 df_test_,
-                test_size=cate_config["nuisance_set_ratio"],
-                random_state=cate_config["rs_nuisance_set_split"],
+                train_size=cate_config["separate_train_set_ratio"],
+                random_state=cate_config["rs_separate_train_set"],
             )
         else:
             df_train = df_nuisance_set.copy()
             df_test = df_test_
         featurizer = None
     else:
-        sim.rs_gaussian = dataset_config["train_seed"]
-        df_train = sim.sample(num_samples=dataset_config["train_size"]).df
+        # For caussim, and the three set procedure, we could keep the train,
+        # test and nuisance set to the same size  in three sets, vs two
+        # sets procedures. However the following code mimic the division of the
+        # train and test by two that we are forced to follow for the
+        # semi-simulated dataset.
+        sim.rs_gaussian = dataset_config["test_seed"] + 1
+        df_nuisance_set = sim.sample(num_samples=dataset_config["train_size"]).df
+        
+        if cate_config.get("separate_train_set_ratio", 0) != 0:
+            separate_train_set_size = int(dataset_config["test_size"] * cate_config["separate_train_set_ratio"])
+            sim.rs_gaussian = dataset_config["train_seed"]
+            df_train = sim.sample(num_samples=separate_train_set_size).df
+            test_size = int(dataset_config["test_size"] * (1- cate_config["separate_train_set_ratio"]))
+        else:
+            df_train = df_nuisance_set.copy()
+            test_size = dataset_config["test_size"]
         sim.rs_gaussian = dataset_config["test_seed"]
-        df_test = sim.sample(
-            num_samples=dataset_config["test_size"],
-        ).df
+        df_test =  sim.sample(num_samples=test_size).df
         featurizer = clone(
             sim.baseline_pipeline.pipeline.named_steps.get(
                 "featurization", IdentityTransformer()
             )
         )
-        if "nuisance_set_size" in dataset_config.keys():
-            sim.rs_gaussian = dataset_config["nuisance_set_seed"]
-            df_nuisance_set = sim.sample(
-                num_samples=dataset_config["nuisance_set_size"],
-            ).df
-        # In the case of caussim, I allow the user to specify a different set for training separately the nuisances.
-        else:
-            df_nuisance_set = df_train.copy()
-
         # Force nuisance featurizer to be the same as the one of the test dataset.
         # Finally we have :
         # - a train_featurizer used only for train_df generation,
-        #  - a test featurizert used for test_df generation, nuisance estimators, candidate estimators.
+        #  - a test featurizer used for test_df generation, nuisance estimators, candidate estimators.
         y_featurizer_name = "featurizer"
         a_featurizer_name = "featurizer"
         if cate_config["y_estimator"].get_params().get("estimators") is not None:

@@ -26,7 +26,7 @@ from caussim.config import (
     LABEL_MAPPING,
     TAB_COLORS,
 )
-from caussim.reports.utils import kendalltau_stats
+from caussim.reports.utils import kendalltau_stats, get_rankings_aggregate, get_metric_rankings_by_dataset
 
 """
 Plot utils for reports
@@ -84,7 +84,8 @@ EVALUATION_METRIC_LABELS = {
     "kendalltau_stats__ref_r_risk": r"""$\kappa (\ell, \tau\mathrm{{-Risk}}) -
                                      \kappa(\widehat{\mathrm{R-risk}}(f),
                                      \tau\mathrm{{-Risk}})$""",
-    "kendalltau_stats__ref_mean_risks": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$"
+    "kendalltau_stats__ref_mean_risks": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$",
+    "kendalltau_stats__ref_mean_risks_long": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$ compared to the mean over all metrics $\kappa$"
 }
 
 METRIC_PALETTE = {
@@ -470,6 +471,103 @@ def plot_ranking_aggregation(
     ax.set(ylim=y_lim)
     return ax
 
+def plot_metric_rankings_by_overlap_bin(
+    expe_results: Dict[str, pd.DataFrame],
+    reference_metric: str,
+    expe_indices: List[str],
+    expe_causal_metrics: List[str],
+    candidate_params: List[str],
+    overlap_measure: str,
+    comparison_label: str
+):
+    aggregation_f_name = kendalltau_stats.__name__
+    binned_results = []
+    for xp_name, xp_res in expe_results.items():
+        expe_rankings = get_metric_rankings_by_dataset(
+            expe_results=xp_res,
+            expe_indices=expe_indices,
+            causal_metrics=expe_causal_metrics,
+            candidate_params=candidate_params,
+        )
+
+        rankings_agg = get_rankings_aggregate(
+            expe_rankings=expe_rankings,
+            expe_indices=expe_indices,
+            causal_metrics=expe_causal_metrics,
+        )
+
+        rankings_matches = [
+            re.search(f"{aggregation_f_name}__tau_risk_(.*)", col)
+            for col in rankings_agg.columns
+        ]
+        selection_metrics = [
+            reg_match.group(1) for reg_match in rankings_matches if reg_match is not None
+        ]
+        rankings_name = [
+            reg_match.group(0) for reg_match in rankings_matches if reg_match is not None
+        ]
+        if reference_metric is not None:
+            reference_ranking_name = f"{aggregation_f_name}__tau_risk_{reference_metric}"
+            if reference_metric in selection_metrics:
+                selection_metrics.remove(reference_metric)
+                rankings_name.remove(reference_ranking_name)
+            elif reference_metric == "mean_risks":
+                rankings_agg[reference_ranking_name] = rankings_agg[rankings_name].mean(axis=1)
+            else: 
+                raise ValueError(f"reference_metric should be in {selection_metrics} or 'mean_risks', got {reference_metric}")
+                
+            for ranking_ in rankings_name:
+                rankings_agg[ranking_] = (
+                    rankings_agg[ranking_]
+                    - rankings_agg[reference_ranking_name]
+                )
+            evaluation_metric = aggregation_f_name + "__ref_" + reference_metric
+        else:
+            evaluation_metric = aggregation_f_name
+        var_name = "Metrics"
+        rankings_aggregation_melted = rankings_agg.melt(
+            id_vars=expe_indices,
+            value_vars=rankings_name,
+            var_name=var_name,
+            value_name=evaluation_metric,
+        )
+        # shape = n_experiences x n_causal_metrics
+        bins_quantiles = [0,0.33, 0.66, 1]
+        bins_values = rankings_aggregation_melted[overlap_measure].quantile(bins_quantiles).values
+        #bins_labels = [f"{b_low:.2f}-{b_sup:.2f}" for b_low, b_sup in
+        #zip(bins_values[:-1], bins_values[1:])]
+        bins_labels = ["Strong Overlap", "Medium Overlap", "Weak Overlap"]
+        overlap_bin_label = "overlap_bin"
+        rankings_aggregation_melted[overlap_bin_label] = pd.cut(rankings_aggregation_melted[overlap_measure], bins=bins_values, labels=bins_labels).astype(str)
+        rankings_aggregation_melted[comparison_label] = xp_name
+        binned_results.append(rankings_aggregation_melted)
+    binned_results_df = pd.concat(binned_results, axis=0)
+    # keep only extrem tertiles
+    binned_results_df = binned_results_df.loc[
+        binned_results_df[overlap_bin_label].isin(
+            [bins_labels[0], bins_labels[1], bins_labels[2]])
+            ]
+    binned_results_df[var_name] = binned_results_df[var_name].apply(
+        lambda x: CAUSAL_METRIC_LABELS[re.sub(f"{aggregation_f_name}__tau_risk_", "", x)]
+    )
+    
+    g = sns.catplot(
+        data=binned_results_df,
+        x=evaluation_metric,
+        y=var_name,
+        hue=comparison_label,
+        col=overlap_bin_label, 
+        aspect=1.5,
+        height=7,
+        kind="box",
+        col_order=[bins_labels[0], bins_labels[2]]
+    )
+    # Aesthetics
+    g.set_titles(col_template="NTV: {col_name}")
+    g.set(xlabel="",ylabel="")
+    #g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric], y=0.04)
+    g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric+"_long"], y=0.04)
+    return g
 
 def get_selection_legend(metrics, subtitles=True):
     oracle_metrics_subset = [

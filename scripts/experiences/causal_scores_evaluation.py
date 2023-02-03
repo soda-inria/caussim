@@ -23,6 +23,7 @@ from caussim.experiences.base_config import (
     CATE_CONFIG_LOGISTIC_NUISANCE,
     DATASET_GRID_EXTRAPOLATION_RESIDUALS,
     DATASET_GRID_FULL_EXPES,
+    ACIC_2018_PARAMS
 )
 
 from caussim.experiences.utils import compute_w_slurm, set_causal_score_xp_name
@@ -30,35 +31,22 @@ from caussim.experiences.utils import compute_w_slurm, set_causal_score_xp_name
 RANDOM_STATE = 0
 generator = check_random_state(RANDOM_STATE)
 
-# DATASET_GRID = [
-#     {"dataset_name": ["acic_2016"], "overlap": list(range(5)),"random_state": list(range(1,2))},
-#     {"dataset_name": ["acic_2016"], "overlap": list(range(20)),"random_state": list(range(1,2))},
-#     {"dataset_name": ["acic_2016"], "overlap": list(range(30)),"random_state": list(range(1,2))} # overlap full
-#     ]
 
 DATASET_GRID = [
-    # {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 11))}
-    {
-        "dataset_name": ["caussim"],
-        "overlap": generator.uniform(0, 2.5, size=100),
-        "random_state": list(range(1, 4)),
-        "treatment_ratio": [0.25, 0.5, 0.75],
-    }
-    # {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] == 5000, "ufid"].values},
-    # {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 6))},
-    # {"dataset_name": ["caussim"], "overlap": generator.uniform(0, 2.5, size=100), "random_state":list(range(1, 11))}
-    # {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(5))},
-    ## Add a configuration for nuisance, train, test sets.
     # {
     #     "dataset_name": ["caussim"],
     #     "overlap": generator.uniform(0, 2.5, size=100),
     #     "random_state": list(range(1, 4)),
     #     "treatment_ratio": [0.25, 0.5, 0.75],
-    #     "nuisance_set_size": [2500],
     # }
+     {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(10))},
+    {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] <=5000, "ufid"].values},
+    {"dataset_name": ["acic_2016"], "overlap": list(range(1, 78)),"random_state": list(range(1, 11))},
 ]
-# DATASET_GRID = DATASET_GRID_FULL_EXPES
+#DATASET_GRID = DATASET_GRID_FULL_EXPES
 
+# add a parameter for three sets estimation
+CATE_CONFIG_ENSEMBLE_NUISANCES["nuisance_ratio"] = 0.5
 
 # ### Evaluate several dgps ### #
 if __name__ == "__main__":
@@ -84,8 +72,6 @@ if __name__ == "__main__":
     expe_timestamp = datetime.now()
     # Set important parameters for loop
     cate_config = deepcopy(CATE_CONFIG_ENSEMBLE_NUISANCES)
-    cate_config["test_ratio"] = 0.5
-    cate_config["rs_test_split"] = 0
     # Loop on simulations
     # xp_name = config['xp_name']
     simu_grid = []
