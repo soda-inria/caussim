@@ -20,7 +20,7 @@ from caussim.experiences.base_config import (
     CANDIDATE_FAMILY_RIDGE_TLEARNERS,
     CATE_CONFIG_ENSEMBLE_NUISANCES,
     CANDIDATE_FAMILY_HGB,
-    CATE_CONFIG_LOGISTIC_NUISANCE,
+    CATE_CONFIG_LOGISTIC_NUISANCES,
     DATASET_GRID_EXTRAPOLATION_RESIDUALS,
     DATASET_GRID_FULL_EXPES,
     ACIC_2018_PARAMS
@@ -47,7 +47,7 @@ DATASET_GRID = [
 
 # Fixing this parameter to non 0 separate the test set into a train set and a
 # test distinct from the nuisance set (kept to the same size)
-XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCE.copy()
+XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
 XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0.5
 
 # ### Evaluate several dgps ### #

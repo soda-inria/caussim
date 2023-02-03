@@ -160,7 +160,7 @@ CATE_CONFIG_ENSEMBLE_NUISANCES = {
 }
 
 
-CATE_CONFIG_LOGISTIC_NUISANCE = {
+CATE_CONFIG_LOGISTIC_NUISANCES = {
     "final_estimator": Ridge(),
     "y_estimator": Pipeline(
         [
