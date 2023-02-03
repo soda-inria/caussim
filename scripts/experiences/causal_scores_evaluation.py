@@ -41,13 +41,14 @@ DATASET_GRID = [
         "overlap": generator.uniform(0, 2.5, size=100),
         "random_state": list(range(1, 4)),
         "treatment_ratio": [0.25, 0.5, 0.75],
-    }
+    },
 ]
 #DATASET_GRID = DATASET_GRID_FULL_EXPES
 
 # Fixing this parameter to non 0 separate the test set into a train set and a
 # test distinct from the nuisance set (kept to the same size)
-CATE_CONFIG_ENSEMBLE_NUISANCES["separate_train_set_ratio"] = 0.5
+XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCE.copy()
+XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0.5
 
 # ### Evaluate several dgps ### #
 if __name__ == "__main__":
@@ -71,8 +72,6 @@ if __name__ == "__main__":
     config = vars(config)
 
     expe_timestamp = datetime.now()
-    # Set important parameters for loop
-    cate_config = deepcopy(CATE_CONFIG_ENSEMBLE_NUISANCES)
     # Loop on simulations
     # xp_name = config['xp_name']
     simu_grid = []
@@ -85,12 +84,12 @@ if __name__ == "__main__":
         xp_name = set_causal_score_xp_name(
             dataset_name=dataset_name,
             dataset_grid=dataset_grid,
-            cate_config=cate_config,
+            cate_config=XP_CATE_CONFIG_SETUP,
             candidate_estimators_grid=candidate_estimators_grid,
         )
         for dataset_setup in tqdm(ParameterGrid(dataset_grid)):
             dataset_config = make_dataset_config(**dataset_setup)
-            cate_config = deepcopy(cate_config)
+            cate_config = deepcopy(XP_CATE_CONFIG_SETUP)
             candidate_estimators_grid = deepcopy(candidate_estimators_grid)
             if config["slurm"]:
                 simu_grid.append(
