@@ -18,27 +18,36 @@ from caussim.config import *
 
 sns.set_style("whitegrid")
 
-@pytest.mark.parametrize(
-    "xp_paths, reference_metric, comparison_label, plot_xlabel, plot_legend",
-    [
-        # (
-        #     {
-        #         "Two sets": Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"),
-        #         "Three sets":Path(
-        #         DIR2EXPES
-        #         / "caussim_save"
-        #         / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"),
-        #     }, "mean_risks", "Training procedure", True, True
-        #     ),
-        (
+
+PROCEDURE_EXPERIMENTS = [
+    (
+            {
+                "Shared set": Path(DIR2EXPES / "caussim_save"/ "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_join_nuisance_train_set"),
+                "Separated set":Path(
+                DIR2EXPES
+                / "caussim_save"
+                / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247_separated_nuisance_train_set"),
+            }, "mean_risks", "Training procedure", True, True, False
+            ),
+]
+
+NUISANCE_MODEL_EXPERIMENTS = [
+(
             {
                 "Linear": Path(DIR2EXPES / "caussim_save"/ "caussim__linear_regressor__test_size_5000__n_datasets_1000"),
                 "Stacked": Path(
                 DIR2EXPES
                 / "caussim_save"
                 / "caussim__stacked_regressor__test_size_5000__n_datasets_1000"),
-            }, "mean_risks", "Nuisance models", True, True
+            }, "mean_risks", "Nuisance models", True, True, True
             )
+]
+
+@pytest.mark.parametrize(
+    "xp_paths, reference_metric, comparison_label, plot_xlabel, plot_legend, plot_middle_bin",
+    [
+        *PROCEDURE_EXPERIMENTS
+        #*NUISANCE_MODEL_EXPERIMENTS
     ],
 )
 def test_report_causal_scores_evaluation(
@@ -46,8 +55,23 @@ def test_report_causal_scores_evaluation(
     reference_metric: str,
     comparison_label: str,
     plot_xlabel: bool,
-    plot_legend: bool
+    plot_legend: bool,
+    plot_middle_bin: bool
 ):
+    """_summary_
+
+    Args:
+        xp_paths (Path): Paths of the experiments to compare
+        reference_metric (str): the metric to use as a reference for the ranking
+        (default is the mean of kendalls over all metrics)
+        comparison_label (str): the hue legend title (ie. main axis of analysis)
+        plot_xlabel (bool): 
+        plot_legend (bool): 
+        plot_middle_bin (bool): if True, the middle tertile of overlap is plotted.
+
+    Returns:
+        _type_: _description_
+    """
     expe_results = {}
     for expe_name, xp_path in xp_paths.items():
         xp_res_, _ = read_logs(xp_path)
@@ -81,7 +105,8 @@ def test_report_causal_scores_evaluation(
         expe_causal_metrics=expe_causal_metrics,
         candidate_params=candidate_params,
         overlap_measure=overlap_measure,
-        comparison_label=comparison_label
+        comparison_label=comparison_label,
+        plot_middle_bin=plot_middle_bin
     )
     if not plot_xlabel:
         g.fig.suptitle("")

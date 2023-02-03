@@ -85,7 +85,7 @@ EVALUATION_METRIC_LABELS = {
                                      \kappa(\widehat{\mathrm{R-risk}}(f),
                                      \tau\mathrm{{-Risk}})$""",
     "kendalltau_stats__ref_mean_risks": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$",
-    "kendalltau_stats__ref_mean_risks_long": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$ compared to the mean over all metrics $\kappa$"
+    "kendalltau_stats__ref_mean_risks_long": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$ compared to the mean over all metrics Kendall's"
 }
 
 METRIC_PALETTE = {
@@ -478,7 +478,8 @@ def plot_metric_rankings_by_overlap_bin(
     expe_causal_metrics: List[str],
     candidate_params: List[str],
     overlap_measure: str,
-    comparison_label: str
+    comparison_label: str,
+    plot_middle_bin: bool = False,
 ):
     aggregation_f_name = kendalltau_stats.__name__
     binned_results = []
@@ -550,20 +551,23 @@ def plot_metric_rankings_by_overlap_bin(
     binned_results_df[var_name] = binned_results_df[var_name].apply(
         lambda x: CAUSAL_METRIC_LABELS[re.sub(f"{aggregation_f_name}__tau_risk_", "", x)]
     )
-    
+    if plot_middle_bin:
+        col_order = [bins_labels[0], bins_labels[1], bins_labels[2]]
+    else:
+        col_order = [bins_labels[0], bins_labels[2]]
     g = sns.catplot(
         data=binned_results_df,
         x=evaluation_metric,
         y=var_name,
         hue=comparison_label,
         col=overlap_bin_label, 
-        aspect=1.5,
-        height=7,
+        aspect=1.2,
+        height=10,
         kind="box",
-        col_order=[bins_labels[0], bins_labels[2]]
+        col_order=col_order
     )
     # Aesthetics
-    g.set_titles(col_template="NTV: {col_name}")
+    g.set_titles(col_template="{col_name}")
     g.set(xlabel="",ylabel="")
     #g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric], y=0.04)
     g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric+"_long"], y=0.04)
