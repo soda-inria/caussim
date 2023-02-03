@@ -48,6 +48,7 @@ DATASET_GRID = [
 # Fixing this parameter to non 0 separate the test set into a train set and a
 # test distinct from the nuisance set (kept to the same size)
 XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
+#XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCES.copy()
 XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0.5
 
 # ### Evaluate several dgps ### #
