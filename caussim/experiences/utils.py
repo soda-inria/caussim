@@ -31,7 +31,12 @@ def set_causal_score_xp_name(dataset_name:str, dataset_grid, cate_config, candid
     else:
         estimator_type = "linear"
     candidate_family_type = candidate_estimators_grid[0]["estimator"]
-    xp_name = f"{dataset_name}__nuisance_{estimator_type}__candidates_{candidate_family_type}__"
+    separate_train_set_ratio = cate_config.get("separate_train_set_ratio")
+    if separate_train_set_ratio == 0:
+        separate_train_set_str = ""
+    else:
+        separate_train_set_str = f"3set_{separate_train_set_ratio:.2f}__"
+    xp_name = f"{dataset_name}__nuisance_{estimator_type}__candidates_{candidate_family_type}__{separate_train_set_str}"
     if dataset_name == "acic_2016":
         xp_name += f"dgp_{min(dataset_grid['dgp'])}-{max(dataset_grid['dgp'])}__rs_{min(dataset_grid['random_state'])}-{max(dataset_grid['random_state'])}"
     elif dataset_name == "acic_2018":
@@ -42,6 +47,7 @@ def set_causal_score_xp_name(dataset_name:str, dataset_grid, cate_config, candid
         xp_name += f"overlap_{int(100*min(dataset_grid['overlap'])):02d}-{int(100*max(dataset_grid['overlap'])):02d}"
     else:
         raise ValueError(f"Supported datasets are: {_supported_datasets}, got {dataset_name}")
+   
     return xp_name
 
 @memory.cache
