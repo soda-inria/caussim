@@ -85,7 +85,7 @@ PAPER_EXPERIENCES = mean_risk_xps_config
         Path(
             DIR2EXPES
             / "caussim_save"
-            / "caussim__stacked_regressor__test_size_5000__n_datasets_1000"
+            / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247"
         ),
         False,
         0.6,
@@ -93,6 +93,18 @@ PAPER_EXPERIENCES = mean_risk_xps_config
         (-1, 1),
         "mean_risks",
     ),
+    # (
+    #     Path(
+    #         DIR2EXPES
+    #         / "caussim_save"
+    #         / "caussim__linear_regressor__test_size_5000__n_datasets_1000"
+    #     ),
+    #     False,
+    #     0.6,
+    #     (1e-2, 5 * 1e1),
+    #     (-1, 1),
+    #     "mean_risks",
+    # ),
         # (Path(DIR2EXPES / "caussim_save"/
         # "caussim__linear_regressor__test_size_5000__n_datasets_1000"), True,
         # 0.6, (1e-2, 5e1), (0, 1.05), None), # Here, nuisances are learned with
@@ -131,7 +143,7 @@ def test_report_causal_scores_evaluation(
     expe_results, _ = read_logs(xp_path)
    
     dataset_name = expe_results["dataset_name"].values[0]
-    # subsetting
+    # #subsetting
     # subset_of_xp = expe_results["test_d_normalized_tv"].value_counts().index[:100]
     # expe_results = expe_results.loc[
     #     expe_results["test_d_normalized_tv"].isin(subset_of_xp)

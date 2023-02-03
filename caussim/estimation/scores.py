@@ -35,8 +35,8 @@ def w_risk(y, a,hat_e, hat_tau, trimming=None):
         clipped_hat_e = np.clip(hat_e, trimming, 1 - trimming)
     else:
         clipped_hat_e = hat_e
-    ipw_weights_squared = (a / clipped_hat_e + (1 - a) / (1 - clipped_hat_e))**2
-    return np.sum(((y - hat_tau) ** 2) * ipw_weights_squared) / len(y)
+    pseudo_outcome = (y * (a - clipped_hat_e))/(clipped_hat_e * (1 - clipped_hat_e))
+    return np.mean((pseudo_outcome - hat_tau) ** 2)
 
 def ipw_r_risk(y, a, hat_mu_0, hat_mu_1, hat_e, hat_m, trimming=None):
     if trimming is not None:

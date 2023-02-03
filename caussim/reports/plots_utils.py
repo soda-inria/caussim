@@ -46,6 +46,10 @@ CAUSAL_METRICS = [
     # "r_risk_gold_m",
     # "r_risk_ipw",
     # "r_risk_IS2",
+    "u_risk",
+    "oracle_u_risk",
+    "w_risk",
+    "oracle_w_risk",
     "tau_risk",
 ]
 
