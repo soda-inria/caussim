@@ -405,7 +405,7 @@ ACIC_2018_PARAMS = pd.read_csv(DIR2SEMI_SIMULATED_DATA / "acic_2018" / "scaling"
 DATASET_GRID_FULL_EXPES = [
     {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(10))},
     {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] <=5000, "ufid"].values},
-    {"dataset_name": ["acic_2016"], "overlap": list(range(1, 78)),"random_state": list(range(1, 11))},
+    {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 11))},
     {"dataset_name": ["caussim"], "overlap": generator.uniform(0, 2.5, size=100), "random_state":list(range(1, 11))} 
 ]
 

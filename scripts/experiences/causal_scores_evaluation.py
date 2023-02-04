@@ -32,23 +32,24 @@ RANDOM_STATE = 0
 generator = check_random_state(RANDOM_STATE)
 
 SMALL_DATASET_GRID = [
-    {"dataset_name": ["acic_2016"], "overlap": list(range(1, 78)),"random_state": list(range(1, 6))},
+    {"dataset_name": ["acic_2016"], "dgp": list(range(1, 78)),"random_state": list(range(1, 11))},
     {
         "dataset_name": ["caussim"],
-        "overlap": generator.uniform(0, 2.5, size=50),
+        "overlap": generator.uniform(0, 2.5, size=100),
         "random_state": list(range(1, 4)),
         "treatment_ratio": [0.25, 0.5, 0.75],
     },
-    {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(5))},
+    {"dataset_name": ["twins"],"overlap": generator.uniform(0.1, 3, size=100), "random_state": list(np.arange(10))},
     {"dataset_name": ["acic_2018"], "ufid": ACIC_2018_PARAMS.loc[ACIC_2018_PARAMS["size"] <=5000, "ufid"].values},
 ]
-DATASET_GRID = DATASET_GRID_FULL_EXPES
+#DATASET_GRID = DATASET_GRID_FULL_EXPES
+DATASET_GRID = SMALL_DATASET_GRID
 
 # Fixing this parameter to non 0 separate the test set into a train set and a
 # test distinct from the nuisance set (kept to the same size)
-XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
-#XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCES.copy()
-XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0.5
+#XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
+XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCES.copy()
+XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0
 
 # ### Evaluate several dgps ### #
 if __name__ == "__main__":
