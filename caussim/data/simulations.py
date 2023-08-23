@@ -94,6 +94,7 @@ def sample_sigmoids(
     untreated_offset=0.1,
     treated_offset=0,
     alpha_intervention=0.5,
+    ps_offset=0.2,
     max_overlap=0.95,
     xlim=(0, 20),
     space_radius=5,
@@ -115,7 +116,7 @@ def sample_sigmoids(
     R = (tmax - tmin) * X / (xlim[1] - xlim[0]) + tmin
     # intervention
     ps = np.clip(
-        alpha_intervention * sigmoid(R, 1) + 0.2,
+        alpha_intervention * sigmoid(R, 1) + ps_offset,
         1 - max_overlap * np.ones_like(R),
         max_overlap,
     )
@@ -127,6 +128,8 @@ def sample_sigmoids(
     y_0 = mu_0 + y_noise * rng.normal(size=(n, 1))
     # observed response
     y = a * y_1 + (1 - a) * y_0
+    y[y>1] = 1
+    y[y<0] = 0
     # formatting into a dataset
     cols_Z = [f"z_{j}" for j in range(Z.shape[1])]
     cols_X = [f"x_{j}" for j in range(X.shape[1])]

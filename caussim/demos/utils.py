@@ -111,9 +111,9 @@ def show_full_sample(
     show_DM=False,
     show_tau=False,
     axes_labels=[
-        "Confounding X",
-        "Outcome Y",
-    ],  # [r"$X = Charlson \; score$", r"$Y = \mathbb{P}[Mortality]$"],
+        r"$X = Charlson \; score$",# "Confounding X",
+        r"$Y = \mathbb{P}[Mortality]$"#"Outcome Y",
+    ], 
     legend=False,
     legend_prop=None,
     ylims=None,
@@ -340,7 +340,7 @@ def show_full_sample(
         xmin_lim, xmax_lim = np.floor(np.min(df["x_0"])), np.ceil(np.max(df["x_0"]))
     else:
         xmin_lim, xmax_lim = xlims
-    ax.set_ylim((ymin, ymax))
+    ax.set_ylim((ymin-0.05, ymax+0.05))
     ax.set_xlim((xmin_lim, xmax_lim))
     if pretty_axes_locator:
         y_formatter = FixedFormatter(["0", "", "", "", "", "1"])

@@ -23,7 +23,7 @@ from caussim.demos.utils import show_estimates, show_full_sample, show_outcome_f
 
 RANDOM_STATE = 0
 X_NOISE = 0
-Y_NOISE = 0.01
+Y_NOISE = 0.1
 N = 300
 ALPHA_TREATED = 1
 SCALE_TREATED = 0.6
@@ -67,14 +67,14 @@ fig.savefig(
     bbox_inches="tight",
 )
 #%%
-
 # Wo DM
-fig = plt.figure()
-ax, _ = show_full_sample(population_df, fig, legend=True)
+figsize = (9, 4)
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(population_df, fig, legend=True, show_ntv=False)
 causal_df = CausalDf(population_df)
 true_estimates = causal_df.estimate_oracles()
-show_estimates(ax, true_estimates, tau_DM=False)
-fig.suptitle("Sampled population")
+#show_estimates(ax, true_estimates, tau_DM=False)
+#sfig.suptitle("Sampled population")
 fig.tight_layout()
 fig.savefig(
     str(DIR2FIGURES / f"sample.png"),
@@ -85,6 +85,39 @@ fig.savefig(
     bbox_inches="tight",
 )
 
+# %%
+# RCT sample
+population_df_rct = sample_sigmoids(
+    n=N,
+    alpha_treated=ALPHA_TREATED,
+    scale_treated=SCALE_TREATED,
+    alpha_untreated=ALPHA_UNTREATED,
+    scale_untreated=SCALE_UNTREATED,
+    treated_offset=TREATED_OFFSET,
+    alpha_intervention=0,
+    ps_offset=0.5,
+    xlim=(0, 20),
+    x_noise=X_NOISE,
+    y_noise=Y_NOISE,
+    random_state=RANDOM_STATE,
+    max_overlap=MAX_OVERLAP,
+)
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(population_df_rct, fig, legend=False, show_ntv=False)
+causal_df = CausalDf(population_df_rct)
+true_estimates = causal_df.estimate_oracles()
+#show_estimates(ax, true_estimates, tau_DM=False)
+fig.tight_layout()
+fig.savefig(
+    str(DIR2FIGURES / f"sample_rct.png"),
+    bbox_inches="tight",
+)
+fig.savefig(
+    str(DIR2FIGURES / f"sample_rct.pdf"),
+    bbox_inches="tight",
+)
+
+# %%
 # With DM
 fig = plt.figure()
 ax, _ = show_full_sample(population_df, fig, show_DM=True, legend=True)
