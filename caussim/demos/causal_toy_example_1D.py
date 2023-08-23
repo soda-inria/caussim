@@ -54,7 +54,7 @@ sns.set_context("talk")
 # For stepwise explanation
 fig = plt.figure()
 ax, _ = show_full_sample(
-    population_df, fig, show_sample=False, legend=True, show_tau=False
+    population_df, fig, show_sample=False, legend=True, show_tau=False, 
 )
 fig.suptitle("Oracle response surfaces")
 fig.tight_layout()
@@ -70,7 +70,8 @@ fig.savefig(
 # Wo DM
 figsize = (9, 4)
 fig = plt.figure(figsize=figsize)
-ax, _ = show_full_sample(population_df, fig, legend=True, show_ntv=False)
+ax, _ = show_full_sample(population_df, fig, legend=True, show_ntv=False, show_mu_oracle=False,
+)
 causal_df = CausalDf(population_df)
 true_estimates = causal_df.estimate_oracles()
 #show_estimates(ax, true_estimates, tau_DM=False)
@@ -103,7 +104,7 @@ population_df_rct = sample_sigmoids(
     max_overlap=MAX_OVERLAP,
 )
 fig = plt.figure(figsize=figsize)
-ax, _ = show_full_sample(population_df_rct, fig, legend=False, show_ntv=False)
+ax, _ = show_full_sample(population_df_rct, fig, legend=False, show_ntv=False, show_mu_oracle=False,)
 causal_df = CausalDf(population_df_rct)
 true_estimates = causal_df.estimate_oracles()
 #show_estimates(ax, true_estimates, tau_DM=False)

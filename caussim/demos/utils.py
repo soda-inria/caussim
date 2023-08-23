@@ -263,7 +263,7 @@ def show_full_sample(
                 )
             )
             legend_y_labels.append(r"$\hat \mu_a (x)$")
-        if not show_e_oracle:
+        if not show_e_oracle and (show_hat_y or show_mu_oracle):
             legend_treatments = ax.legend(
                 handles=legend_elements,
                 labels=legend_y_labels,
@@ -325,6 +325,37 @@ def show_full_sample(
                 prop={"size": 20},
             )
             ax.add_artist(legend_ps)
+        if (show_sample and not show_mu_oracle):
+            sample_legend_handles = [
+                    Line2D(
+                        [0],
+                        [0],
+                        marker="o",
+                        color=COLOR_MAPPING[0],
+                        alpha=0.6,
+                        linewidth=0,
+                        #markersize=legend_marker_size,
+                    ),
+                    Line2D(
+                        [0],
+                        [0],
+                        marker="o",
+                        color=COLOR_MAPPING[1],
+                        alpha=0.6,
+                        linewidth=0,
+                        #markersize=legend_marker_size,
+                    ),
+                ]
+            ax.add_artist(
+                ax.legend(
+                handles=sample_legend_handles,
+                labels=[r"Control patients", r"Treated patients"],
+                loc="upper left",
+                #numpoints=1,
+               # handler_map={tuple: HandlerTuple(ndivide=2)},
+                prop=legend_prop,
+            ))
+                
     if show_DM:
         mean_1 = np.mean(df[df["a"] == 1]["y"].values)
         mean_0 = np.mean(df[df["a"] == 0]["y"].values)
