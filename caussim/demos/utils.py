@@ -12,6 +12,7 @@ from matplotlib.lines import Line2D
 from matplotlib.ticker import FixedFormatter, FixedLocator
 from sklearn.base import clone
 from sklearn.calibration import CalibratedClassifierCV
+from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
 
 from caussim.config import (
@@ -36,7 +37,7 @@ from caussim.utils import dic2str
 
 
 # TODO: completely deprecated but used in toy example...
-def estimate_DML(train_df: CausalDf, estimation_config, test_df: CausalDf = None):
+def estimate_DML(train_df: pd.DataFrame, estimation_config, test_df:pd.DataFrame = None):
     """
     Args:
         train_df ([type]): [description]
@@ -65,7 +66,8 @@ def estimate_DML(train_df: CausalDf, estimation_config, test_df: CausalDf = None
         random_state_cv=estimation_config.get("random_state_cv", 0),
         meta_learner=estimation_config.get("meta_learner", SLEARNER_LABEL),
     )
-    X_full = np.concatenate([train_df["a"].values, train_df[X_cols].values])
+    
+    X_full = np.column_stack((train_df["a"].values, train_df[X_cols].values))
     train_predictions, train_metrics = estimator.fit_predict(
         X=X_full, y=train_df["y"].values
     )
@@ -89,7 +91,7 @@ def estimate_DML(train_df: CausalDf, estimation_config, test_df: CausalDf = None
         for k, v in tau_estimation.items():
             estimates[f"{tau_name}_{k}"] = v
 
-    true_estimates = test_df.estimate_oracles()
+    true_estimates = CausalDf(test_df).estimate_oracles()
     all_estimates = {**true_estimates, **estimates}
     # estimation of tau_risk
     if outcome_model is not None:
@@ -121,6 +123,7 @@ def show_full_sample(
     common_norm=True,
     pretty_axes_locator=False,
     show_ntv=True,
+    show_sample_legend=False
 ) -> Tuple[plt.Axes, plt.Axes]:
 
     df["w_a"] = df["a"] * 1 / df["e"] + (1 - df["a"]) / (1 - df["e"])
@@ -156,7 +159,7 @@ def show_full_sample(
                 linewidth=0,
                 s=ss,
                 facecolors=COLOR_MAPPING[a],
-                alpha=0.7,
+                alpha=0.5,
             )
         if show_mu_oracle:
             mu_a = df[["x_0", f"mu_{a}"]].sort_values("x_0")
@@ -190,7 +193,7 @@ def show_full_sample(
                 hat_mu_a[f"hat_mu_{a}"].values,
                 linewidth=3,
                 linestyle="-",
-                c="black",
+                c=COLOR_MAPPING[a],
             )
     if show_tau:
         x_tau = df.sort_values("x_0")["x_0"].values[int(0.75 * df.shape[0])]
@@ -254,29 +257,37 @@ def show_full_sample(
         legend_y_labels = [r"Untreated outcome $Y_0 (x)$", r"Treated outcome $Y_1 (x)$"]
         if show_hat_y:
             legend_elements.append(
+                (
                 Line2D(
+                    [-1],
                     [0],
-                    [0],
-                    color="black",
+                    color=COLOR_MAPPING[0],
                     lw=3,
-                    linestyle="-",
+                    #linestyle="-",
+                ),
+                Line2D(
+                    [1],
+                    [0],
+                    color=COLOR_MAPPING[1],
+                    lw=3,
+                )
                 )
             )
-            legend_y_labels.append(r"$\hat \mu_a (x)$")
+            legend_y_labels.append(r"Predicted outcomes")
         if not show_e_oracle and (show_hat_y or show_mu_oracle):
             legend_treatments = ax.legend(
                 handles=legend_elements,
                 labels=legend_y_labels,
                 loc="upper left",
                 numpoints=1,
-                handler_map={tuple: HandlerTuple(ndivide=2)},
+                handler_map={tuple: HandlerTuple(ndivide=None)},
                 prop=legend_prop,
             )
             ax.add_artist(legend_treatments)
         # ps legend
         legend_ps_handles = []
         legend_ps_labels = []
-        legend_marker_size = 10
+        legend_marker_size = 20
         if show_e_oracle:
             legend_ps_handles.append(
                 (
@@ -300,9 +311,15 @@ def show_full_sample(
                     ),
                 ),
             )
-            legend_ps_labels.append(r"$w(x, a)=\frac{a}{e(x)} + \frac{1-a}{1-e(x)}$")
+            legend_ps_labels.append(
+                "True IPW"
+                #r"$w(x, a)=\frac{a}{e(x)} + \frac{1-a}{1-e(x)}$"
+                )
             if show_hat_e:
-                legend_ps_labels.append(r"$\hat w(x, a)$")
+                legend_ps_labels.append(
+                    "Predicted IPW"
+                    #r"$\hat w(x, a)$"
+                    )
                 legend_ps_handles.append(
                     Line2D(
                         [0],
@@ -318,14 +335,14 @@ def show_full_sample(
             legend_ps = ax.legend(
                 handles=legend_ps_handles,
                 labels=legend_ps_labels,
-                loc="lower left",
-                title=r"Inverse Propensity weight",
+                loc="upper left",
+                title=r"Inverse Propensity Weights (IPW)",
                 numpoints=1,
                 handler_map={tuple: HandlerTuple(ndivide=2)},
-                prop={"size": 20},
+                prop={"size": 15},
             )
             ax.add_artist(legend_ps)
-        if (show_sample and not show_mu_oracle):
+        if (show_sample and not show_mu_oracle and show_sample_legend):
             sample_legend_handles = [
                     Line2D(
                         [0],
@@ -447,10 +464,10 @@ def show_outcome_fit(
         left_index=True,
         right_index=True,
     )
-
+    
     dummy_ya = np.random.randint(0, 2, size=len(sample_["x_0"]))
     predictions, _ = estimator.predict(
-        sample_["x_0"].values.reshape(-1, 1), dummy_ya, leftout=True
+        sample_[["a", "x_0"]].values.reshape(-1, 2), dummy_ya, leftout=True
     )
     sample_["hat_mu_0"] = predictions["hat_mu_0"]
     sample_["hat_mu_1"] = predictions["hat_mu_1"]
@@ -466,6 +483,8 @@ def show_outcome_fit(
         show_hat_y=show_hat_y,
         legend=True,
         legend_prop=legend_prop,
+        show_ntv=False,
+        pretty_axes_locator=True
     )
 
     return estimator, all_estimates, test_metrics, ax, ax_histx

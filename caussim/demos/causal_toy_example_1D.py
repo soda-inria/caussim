@@ -140,10 +140,7 @@ paper_figsize = (12, 6)
 fig = plt.figure(figsize=paper_figsize)
 ax, _ = show_full_sample(population_df, fig, show_sample=True, legend=True)
 fig.tight_layout()
-fig.savefig(
-    str(DIR2PAPER_IMG / f"oracle_mu.png"),
-    bbox_inches="tight",
-)
+
 # %%
 xanchor_estimates = 0.55
 xanchor_metrics = 0.75
@@ -240,50 +237,3 @@ fig.savefig(
     bbox_inches="tight",
 )
 
-# %%
-# Different g-formula examples
-# 1 - good model = random forest
-OUTCOME_MODELS = ["random_forest", "linear", "linear_tlearn"]
-for outcome_model in OUTCOME_MODELS:
-    fig = plt.figure()
-    estimator, estimations, metrics, ax, ax_histx = show_outcome_fit(
-        population_df,
-        fig,
-        outcome_model=outcome_model,
-        propensity_model=outcome_model,
-        show_hat_y=True,
-        clip=CLIP,
-        n_splits=5,
-    )
-    show_estimates(ax, estimations, tau_G=True, tau_risk=True)
-    fig.tight_layout()
-    fig.savefig(
-        str(DIR2FIGURES / f"{outcome_model}.png"),
-        bbox_inches="tight",
-    )
-
-
-# IPW model
-PROPENSITY_MODELS = ["linear", "random_forest"]
-for ps_model in PROPENSITY_MODELS:
-    fig = plt.figure()
-    estimator, estimations, metrics, ax = show_outcome_fit(
-        population_df,
-        fig,
-        outcome_model=ps_model,
-        propensity_model=ps_model,
-        show_e_oracle=True,
-        show_mu_oracle=False,
-        show_hat_y=False,
-        show_hat_e=True,
-        clip=CLIP,
-        n_splits=5,
-    )
-    show_estimates(ax, estimations, tau_IPW=True, tau_IPW_oracle=True)
-    fig.tight_layout()
-    fig.savefig(
-        str(DIR2FIGURES / f"ps_{ps_model}.png"),
-        bbox_inches="tight",
-    )
-
-# %%
