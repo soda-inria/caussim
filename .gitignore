@@ -24,6 +24,8 @@ var/
 *.egg
 **/.venv/
 poetry.lock 
+# git token
+.git_token
 
 # single file xps and logs
 data/experiences/caussim
