@@ -93,7 +93,8 @@ def sample_sigmoids(
     scale_untreated=0.6,
     untreated_offset=0.1,
     treated_offset=0,
-    alpha_intervention=0.5,
+    scale_intervention=0.5,
+    alpha_intervention=1,
     ps_offset=0.2,
     max_overlap=0.95,
     xlim=(0, 20),
@@ -116,7 +117,7 @@ def sample_sigmoids(
     R = (tmax - tmin) * X / (xlim[1] - xlim[0]) + tmin
     # intervention
     ps = np.clip(
-        alpha_intervention * sigmoid(R, 1) + ps_offset,
+        scale_intervention * sigmoid(R, alpha_intervention) + ps_offset,
         1 - max_overlap * np.ones_like(R),
         max_overlap,
     )

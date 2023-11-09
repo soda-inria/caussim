@@ -123,7 +123,9 @@ def show_full_sample(
     common_norm=True,
     pretty_axes_locator=False,
     show_ntv=True,
-    show_sample_legend=False
+    show_sample_legend=False,
+    dm_x=15,
+    dm_v_offset=-0.1,
 ) -> Tuple[plt.Axes, plt.Axes]:
 
     df["w_a"] = df["a"] * 1 / df["e"] + (1 - df["a"]) / (1 - df["e"])
@@ -202,7 +204,7 @@ def show_full_sample(
         arrow = mpatches.FancyArrowPatch(
             (x_tau, mu_0_at_x_tau),
             (x_tau, mu_1_at_x_tau),
-            mutation_scale=30,
+            mutation_scale=20,
             color="black",
         )
         ax.add_patch(arrow)
@@ -212,7 +214,7 @@ def show_full_sample(
             x_tau + x_tau / 20,
             mu_at_x_tau_min + (mu_at_x_tau_max - mu_at_x_tau_min) / 2,
             s=r"$\tau(x)$",
-            fontsize=int(ss / 5),
+            fontsize=int(ss / 6),
         )
     # add an axes for x distribution
     if show_sample:
@@ -377,9 +379,9 @@ def show_full_sample(
         mean_1 = np.mean(df[df["a"] == 1]["y"].values)
         mean_0 = np.mean(df[df["a"] == 0]["y"].values)
         ax.axhline(mean_1, c=COLOR_MAPPING[1], lw=3)
-        ax.text(5.5, mean_1, s=r"$E [Y|A=1]$", c="black", ha="left")
+        ax.text(dm_x, mean_1 + dm_v_offset, s=r"$E [Y|A=1]$", c=COLOR_MAPPING[1], ha="left")
         ax.axhline(mean_0, c=COLOR_MAPPING[0], lw=3)
-        ax.text(5.5, mean_0, s=r"$E [Y|A=0]$", c="black", ha="left")
+        ax.text(dm_x, mean_0 + dm_v_offset, s=r"$E [Y|A=0]$", c=COLOR_MAPPING[0], ha="left")
     if ylims is None:
         ymin, ymax = np.min(df["y"]), np.max(df["y"])
     else:

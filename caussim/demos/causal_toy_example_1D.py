@@ -29,7 +29,7 @@ ALPHA_TREATED = 1
 SCALE_TREATED = 0.6
 ALPHA_UNTREATED = 2
 SCALE_UNTREATED = 0.9
-ALPHA_INTERVENTION = 0.8
+SCALE_INTERVENTION = 0.8
 TREATED_OFFSET = 0.1
 MAX_OVERLAP = 0.95
 CLIP = 1e-2
@@ -41,7 +41,7 @@ population_df = sample_sigmoids(
     alpha_untreated=ALPHA_UNTREATED,
     scale_untreated=SCALE_UNTREATED,
     treated_offset=TREATED_OFFSET,
-    alpha_intervention=ALPHA_INTERVENTION,
+    scale_intervention=SCALE_INTERVENTION,
     xlim=(0, 20),
     x_noise=X_NOISE,
     y_noise=Y_NOISE,
@@ -50,11 +50,12 @@ population_df = sample_sigmoids(
 )
 
 sns.set_context("talk")
-
+figsize = (9, 4)
+# %% 
 # For stepwise explanation
-fig = plt.figure()
+fig = plt.figure(figsize=figsize)
 ax, _ = show_full_sample(
-    population_df, fig, show_sample=False, legend=True, show_tau=False, 
+    population_df, fig, show_sample=False, legend=True, show_tau=False, show_ntv=False
 )
 fig.suptitle("Oracle response surfaces")
 fig.tight_layout()
@@ -66,11 +67,32 @@ fig.savefig(
     str(DIR2FIGURES / f"oracle_mu.pdf"),
     bbox_inches="tight",
 )
+
+# %%
+# Oracle mu with cate objective
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(
+    population_df, fig, show_sample=False, legend=True, show_tau=True, show_ntv=False
+)
+fig.suptitle("Oracle response surfaces")
+fig.tight_layout()
+fig.savefig(
+    str(DIR2FIGURES / f"oracle_mu_w_cate.png"),
+    bbox_inches="tight",
+)
+fig.savefig(
+    str(DIR2FIGURES / f"oracle_mu_w_cate.pdf"),
+    bbox_inches="tight",
+)
 #%%
 # Wo DM
-figsize = (9, 4)
 fig = plt.figure(figsize=figsize)
-ax, _ = show_full_sample(population_df, fig, legend=True, show_ntv=False, show_mu_oracle=False,
+ax, _ = show_full_sample(
+    population_df, 
+    fig, 
+    legend=True, 
+    show_ntv=False, 
+    show_mu_oracle=True
 )
 causal_df = CausalDf(population_df)
 true_estimates = causal_df.estimate_oracles()
@@ -95,7 +117,7 @@ population_df_rct = sample_sigmoids(
     alpha_untreated=ALPHA_UNTREATED,
     scale_untreated=SCALE_UNTREATED,
     treated_offset=TREATED_OFFSET,
-    alpha_intervention=0,
+    scale_intervention=0,
     ps_offset=0.5,
     xlim=(0, 20),
     x_noise=X_NOISE,
@@ -117,13 +139,34 @@ fig.savefig(
     str(DIR2FIGURES / f"sample_rct.pdf"),
     bbox_inches="tight",
 )
+# %%
+# RCT sample with DM
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(
+    population_df_rct, fig, legend=False, show_ntv=False, show_mu_oracle=False, 
+    show_DM=True, dm_x=2.5, dm_v_offset=0.02)
+causal_df = CausalDf(population_df_rct)
+true_estimates = causal_df.estimate_oracles()
+#show_estimates(ax, true_estimates, tau_DM=False)
+fig.tight_layout()
+fig.savefig(
+    str(DIR2FIGURES / f"sample_rct_w_dm.png"),
+    bbox_inches="tight",
+)
+fig.savefig(
+    str(DIR2FIGURES / f"sample_rct_w_dm.pdf"),
+    bbox_inches="tight",
+)
+
 
 # %%
 # With DM
-fig = plt.figure()
-ax, _ = show_full_sample(population_df, fig, show_DM=True, legend=True)
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(
+    population_df, fig, show_DM=True, legend=True, show_ntv=False, dm_x=15,
+    dm_v_offset=-0.1)
 true_estimates = causal_df.estimate_oracles()
-show_estimates(ax, true_estimates)
+#show_estimates(ax, true_estimates)
 fig.suptitle("Sampled population")
 fig.tight_layout()
 fig.savefig(
@@ -229,11 +272,43 @@ show_estimates(
 # ax_histx.text(0.1, 0.005, "covariates_distrib_label", fontweight="heavy")
 fig.tight_layout()
 fig.savefig(
-    str(DIR2PAPER_IMG / f"toy_tlinear_model_small_R2_small_tau_risk.png"),
+    str(DIR2FIGURES / f"toy_tlinear_model_small_R2_small_tau_risk.png"),
     bbox_inches="tight",
 )
 fig.savefig(
-    str(DIR2PAPER_IMG / f"toy_tlinear_model_small_R2_small_tau_risk.pdf"),
+    str(DIR2FIGURES / f"toy_tlinear_model_small_R2_small_tau_risk.pdf"),
     bbox_inches="tight",
 )
 
+# %% Poor overlap 
+population_df_wo_overlap = sample_sigmoids(
+    n=N,
+    alpha_treated=ALPHA_TREATED,
+    scale_treated=SCALE_TREATED,
+    alpha_untreated=ALPHA_UNTREATED,
+    scale_untreated=SCALE_UNTREATED,
+    treated_offset=TREATED_OFFSET,
+    #ps_offset=0,
+    #alpha_intervention=-2,
+    scale_intervention=0,
+    xlim=(0, 20),
+    x_noise=X_NOISE,
+    y_noise=Y_NOISE,
+    random_state=RANDOM_STATE,
+    max_overlap=0.99,
+)
+fig = plt.figure(figsize=figsize)
+ax, _ = show_full_sample(population_df_wo_overlap, fig, legend=False, show_ntv=False, show_mu_oracle=False,)
+causal_df = CausalDf(population_df_wo_overlap)
+true_estimates = causal_df.estimate_oracles()
+#show_estimates(ax, true_estimates, tau_DM=False)
+fig.tight_layout()
+fig.savefig(
+    str(DIR2FIGURES / f"sample_poor_overlap.png"),
+    bbox_inches="tight",
+)
+fig.savefig(
+    str(DIR2FIGURES / f"sample_poor_overlap.pdf"),
+    bbox_inches="tight",
+)
+# %%
