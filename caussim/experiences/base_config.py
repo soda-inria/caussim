@@ -58,6 +58,29 @@ DEFAULT_SIMU_CONFIG = {
 }
 
 
+RATIO_SIMU_CONFIG = {
+    "n_samples_init": 1000,
+    "dim": 2,
+    "baseline_link": DEFAULT_BASELINE_LINK,
+    "effect_link": deepcopy(DEFAULT_BASELINE_LINK),
+    "treatment_link": {
+        "type": "linear",
+        "params": {},
+    },  # Not used because we are using a treatment assignment of type "joint"
+    "treatment_assignment": {
+        "type": "joint",
+        "params": {"sigma": [2, 5], "overlap": 1},
+    },
+    "effect_size": 0.2,
+    "outcome_noise": 0.01,  # 0.01,
+    "treatment_ratio": 0.1,
+    "random_seed": 0,
+    "dataset_name": "caussim",
+    "train_size": 2500,
+    "test_size": 2500,
+    "clip": 0
+}
+
 baseline_link_1D = {
             "type": "nystroem",
             "params": {

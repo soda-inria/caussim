@@ -707,7 +707,7 @@ def plot_simu2D(
             ncol=1,
             loc="upper right",
             bbox_to_anchor=(0.9, 1.01),
-            transform=plt.gcf().transFigure,
+            bbox_transform=plt.gcf().transFigure,
             fontsize=20,
         )
     if title:
@@ -822,6 +822,36 @@ def plot_simu_2D_1D_cuts(df, sim, fig=None):
 
     return fig, [ax1, ax2, ax3]
 
+
+def plot_simu_1D_cuts(df, sim, fig=None):
+    """Plot two ortogonal 1D cuts of the response surface for a given simulation and sample data
+
+    Args:
+        sim ([type]): [description]
+        df ([type]): [description]
+        fig ([type], optional): [description]. Defaults to None.
+
+    Returns:
+        [type]: [description]
+    """
+    if fig is None:
+        fig = plt.figure(figsize=(12, 12))
+    basis = sim.baseline_pipeline.pipeline.named_steps.featurization.components_
+    barycentre = basis.mean(axis=0)
+    orthogonal_dir = np.array([basis[0, 1] - basis[1, 1], -basis[0, 0] + basis[1, 0]])
+    basis_orthog = np.vstack([barycentre, barycentre + orthogonal_dir])
+    ax2 = plt.subplot(211)
+    ax2.set_title("1D cut")
+    fig, _ = plot_simu1D_cut(df, sim, cut_points=basis, fig=fig, ax=ax2)
+
+    ax3 = plt.subplot(212)
+    ax3.set_title("1D cut orthogonal")
+    fig, _ = plot_simu1D_cut(df, sim, cut_points=basis_orthog, fig=fig, ax=ax3)
+    for ax in [ax2, ax3]:
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+    return fig, [ax2, ax3]
 
 # ### Plot risk maps ### #
 def plot_mu_risk(
