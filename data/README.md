@@ -18,7 +18,7 @@ Load one acic 2016 simulation based on their R package,
     remotes::install_github("vdorie/aciccomp/2016")
 ``` 
 
-- ACIC 2018: Donwload only the scaling subset of the data at https://www.synapse.org/#!Synapse:syn11738963
+- ACIC 2018: Download only the scaling subset of the data at https://www.synapse.org/#!Synapse:syn11738963
 
 - TWINS: The twins dataset can be downloaded with the utilitary function
   `load_twins` from [`caussim.data.loading.py`](/caussim/data/loading.py)
@@ -27,7 +27,7 @@ Load one acic 2016 simulation based on their R package,
 
 ## Paper experiment results
 
-The `experiences.zip` file contain the results of the main experience of the
+The [`experiences.zip`](https://zenodo.org/records/13765465?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImJmNTFlOWNjLTUxOTYtNGFjNS04YjVjLTIyZWFjMmNhZjQyMyIsImRhdGEiOnt9LCJyYW5kb20iOiJlOTZjZGE4ZmQzNDFkMWUxNTJhYzI0YWI1ZjUxNGViMyJ9.vPuJgBw0A0w02InS9ovWRShKUGTDk4w6k2uwYBZklRiC-p7hlVvZOOyvpg6wsJ6T5MBW30vUCsL_UdBSCmmFMw) link on zenodo contain the results of the main experience of the
 paper. These results have been obtained by launching as is, the script
 [`/scripts/experiences/causal_scores_evaluation.py`](/scripts/experiences/causal_scores_evaluation.py).
 The csv contained in the zip should be sufficient to replicate the Figure 5.,
