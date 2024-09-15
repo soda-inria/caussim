@@ -5,7 +5,7 @@ from caussim.estimation.scores import heterogeneity_score
 
 from caussim.pdistances.divergences import jensen_shannon_divergence
 from caussim.pdistances.mmd import total_variation_distance
-
+from caussim.pdistances.effect_size import mean_causal_effect
 
 class CausalDf(object):
     def __init__(
@@ -62,6 +62,7 @@ class CausalDf(object):
             ps=self.df["e"],
             n_bins=10,
         )        
+        effect_ratio = mean_causal_effect(self.df["mu_1"], self.df["mu_0"])
         ate = cate.mean()
         mask_treated = self.df["a"] == 1
         att = (
@@ -100,6 +101,7 @@ class CausalDf(object):
             "oracle_ipw": oracle_ipw,
             "oracle_mean_balance_treated_X": mean_balance_treated,
             "oracle_mean_balance_untreated_X": mean_balance_untreated,
+            "effect_ratio": effect_ratio,
         }
         return results
     
