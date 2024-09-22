@@ -40,15 +40,15 @@ DIR2NOTES = (
     / "/../papiers/papiers_matthieu/selecting_predictive_models_for_causal_inference/research_journal/notes_img"
 )
 DIR2PAPER_IMG = (
-    ROOT_DIR / "../papiers/papiers_matthieu/how_to_select_causal_models/images/"
+    ROOT_DIR / "../how_to_select_causal_models/images/"
 )
 
 
 DIR2FIGURES = ROOT_DIR / "figures" 
 DIR2FIGURES.mkdir(exist_ok=True, parents=True)
+
 DIR2FIGURES_T = DIR2FIGURES / "test"
 DIR2FIGURES_T.mkdir(exist_ok=True, parents=True)
-
 
 DIR2REPORTS = DIR2DATA / "analysis_tables"
 DIR2REPORTS.mkdir(exist_ok=True, parents=True)

@@ -46,18 +46,18 @@ SMALL_DATASET_GRID = [
 CAUSAL_RATIO_GRID = [
     {
         "dataset_name": ["caussim"],
-        "overlap": generator.uniform(0, 2.5, size=25),
-        "random_state": list(range(1, 4)),
+        "overlap": generator.uniform(0, 2.5, size=10),
+        "random_state": list(range(1, 2)),
         "treatment_ratio": [0.25, 0.5, 0.75],
         "effect_size": [0.1, 0.5, 0.9],
     },
-]
+]# bigger grid was 25 different overlaps and 5 random states
 DATASET_GRID = CAUSAL_RATIO_GRID#SMALL_DATASET_GRID
 
 # Fixing this parameter to non 0 separate the test set into a train set and a
 # test distinct from the nuisance set (kept to the same size)
-#XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
-XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCES.copy()
+XP_CATE_CONFIG_SETUP =  CATE_CONFIG_ENSEMBLE_NUISANCES.copy()
+#XP_CATE_CONFIG_SETUP =  CATE_CONFIG_LOGISTIC_NUISANCES.copy()
 XP_CATE_CONFIG_SETUP["separate_train_set_ratio"] = 0
 
 # ### Evaluate several dgps ### #
@@ -97,7 +97,7 @@ if __name__ == "__main__":
             cate_config=XP_CATE_CONFIG_SETUP,
             candidate_estimators_grid=candidate_estimators_grid,
         )
-        for dataset_setup in tqdm(list(ParameterGrid(dataset_grid))[:10]):
+        for dataset_setup in tqdm(list(ParameterGrid(dataset_grid))):
             dataset_config = make_dataset_config(**dataset_setup)
             cate_config = deepcopy(XP_CATE_CONFIG_SETUP)
             candidate_estimators_grid = deepcopy(candidate_estimators_grid)

@@ -34,13 +34,13 @@ sns.set_style("whitegrid")
         Path(
             DIR2EXPES
             / "caussim_save"
-            / "caussim__nuisance_non_linear__candidates_ridge__overlap_01-247"
+            / "caussim__nuisance_linear__candidates_ridge__overlap_06-224"
         ),
         False,
         0.6,
         (1e-2, 5 * 1e1),
         (-1, 1),
-        "mean_risks",
+        None
     ),
     ],
 )
@@ -77,16 +77,11 @@ def test_report_causal_scores_evaluation(
     expe_results = expe_results.loc[~outliers_mask]
     logging.warning(f"Removing {outliers_mask.sum()} with mse_ate>{max_mse_ate}")
     candidate_params = get_candidate_params(expe_results)
-    overlap_measure, expe_indices = get_expe_indices(expe_results)
-    # TODO: a bit too hidden to change this here
-    overlap_measure = ""
-    if HTY_PLOT:
-        expe_indices += [
-            "log_treatment_heterogeneity_norm",
-            "treatment_heterogeneity_norm",
-            "heterogeneity_score_norm",
-        ]
-
+    _, expe_indices = get_expe_indices(expe_results)
+    #THE MEASURE OF INTEREST IS NO LONGER THE OVERLAP, but effect_ratio
+    effect_ratio_measure = "effect_ratio"
+    expe_indices += [effect_ratio_measure]
+    
     logging.info(
         f"Nb (simulations x test_seed) : {len(expe_results[expe_indices].drop_duplicates())}"
     )
@@ -121,7 +116,7 @@ def test_report_causal_scores_evaluation(
         )
         ax, n_found_oracles_grouped_overlap = plot_agreement_w_tau_risk(
             comparison_df_w_best_as_oracle,
-            overlap_measure,
+            effect_ratio_measure,
             nuisance_models_label=nuisance_models_label,
             show_legend=show_legend,
         )
@@ -138,7 +133,7 @@ def test_report_causal_scores_evaluation(
         # evaluation_measures = []
 
         for eval_m in evaluation_measures:
-            moi = overlap_measure
+            moi = effect_ratio_measure
             ax = plot_evaluation_metric(
                 comparison_df_w_best_as_oracle=comparison_df_w_best_as_oracle,
                 evaluation_metric=eval_m,
@@ -175,55 +170,6 @@ def test_report_causal_scores_evaluation(
             causal_metrics=xp_causal_metrics,
         )
         
-            # Quantile direction cuts the datasets in several bins (eg. heterogeneity bins) and compute a ranking plot on each bin along the direction of interest (eg. overlap)
-            quantiles_direction = "treatment_heterogeneity_norm"
-
-            # Treatment heterogeneity sub-plots for terciles of overlap
-            quantiles_ = np.quantile(
-                expe_results[quantiles_direction].unique(), q=[0.33, 0.66]
-            )
-            eps = 1e-6
-            bins_low = [np.min(expe_results[quantiles_direction]) - eps, *quantiles_]
-            bins_sup = [*quantiles_, np.max(expe_results[quantiles_direction]) + eps]
-            bins_ = [(b_low, b_sup) for (b_low, b_sup) in zip(bins_low, bins_sup)]
-            # overlap_bins = [(0,1)]
-            for i, (bin_min, bin_max) in enumerate(bins_):
-                rankings_agg_by_bin = rankings_agg.loc[
-                    (rankings_agg[quantiles_direction] >= bin_min)
-                    & (rankings_agg[quantiles_direction] < bin_max)
-                ]
-                for metric_of_interest in [
-                    overlap_measure
-                ]:  # "treatment_heterogeneity_norm", ,"heterogeneity_score_norm"]:
-                    ax = plot_ranking_aggregation(
-                        rankings_aggregation=rankings_agg_by_bin,
-                        expe_indices=expe_indices,
-                        x_metric_name=metric_of_interest,
-                        lowess_type="lowess_quantile",
-                        lowess_kwargs={"frac": 0.66, "it": 10, "quantile": quantile},
-                        show_legend=False,
-                        y_lim=ylim_ranking,
-                        reference_metric=None,
-                    )
-                    ax.text(
-                        0,
-                        0.92,
-                        s=f"{METRIC_OF_INTEREST_LABELS[quantiles_direction]}: {bin_min:.2f}-{bin_max:.2f}",
-                        transform=plt.gcf().transFigure,
-                        fontsize=20,
-                    )
-                    xmin = np.percentile(rankings_agg_by_bin[metric_of_interest], 5)
-                    xmax = np.percentile(rankings_agg_by_bin[metric_of_interest], 95)
-                    ax.set(xlim=(np.max([xmin, -1.5]), xmax))
-                    plt.tight_layout()
-                    save_figure_to_folders(
-                        figure_name=Path(
-                            f"kendalls_tau_{metric_of_interest}/{xp_path.stem}_{quantiles_direction}_tercile_{i}"
-                        ),
-                        figure_dir=True,
-                        notes_dir=True,
-                        paper_dir=False,
-                    )
         if reference_metric is not None:
             #ylim_ranking = (ylim_ranking[0] - ylim_ranking[1], ylim_ranking[1])
             ref_metric_str = f"_ref_metric_{reference_metric}"
@@ -232,7 +178,7 @@ def test_report_causal_scores_evaluation(
         ax = plot_ranking_aggregation(
             rankings_aggregation=rankings_agg,
             expe_indices=expe_indices,
-            x_metric_name=overlap_measure,
+            x_metric_name=effect_ratio_measure,
             lowess_type="lowess_quantile",
             lowess_kwargs={"frac": 0.66, "it": 10, "quantile": quantile},
             show_legend=False,

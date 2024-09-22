@@ -5,8 +5,7 @@ description = "Causal Inference Simulations"
 authors = ["Matthieu Doutreligne"]
 license = "Apache-2.0"
 readme = "README.md"
-repository = "caussim"
-homepage = ""
+repository = "https://github.com/soda-inria/caussim"
 include = ["bin"]
 packages = [
     { include = "caussim"},
@@ -49,6 +48,7 @@ pyarrow = "^6.0.1"
 submitit = "^1.4.1"
 rpy2 = "^3.4.5"
 moepy = "^1.1.4"
+pandas = "1.5"
 
 [tool.poetry.dev-dependencies]
 

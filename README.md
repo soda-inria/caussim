@@ -51,9 +51,9 @@ Reports outputs are mainly figures for the papers. To obtain the results, run `p
 
 The main report type is a pytest function contained in the `reports/causal_scores_evaluation.py` script. For each macro-dataset, it plot the results of running a given set of candidate estimators with a fixed nuisance estimator on several generation process of the macro-dataset (often hundreds of sampled datasets). 
 
-**🔎 Replicate the main figure of the paper (Figure 5.)**, launch the script
-[scripts/reports/causal_scores_evaluation.py](scripts/reports/causal_scores_evaluation.py).
-It should take some time because of the high number of simualtions results. Make
+**🔎 Replicate the main figure of the paper (Figure 3.)**, launch the script
+[scripts/reports/_1_r_risk_domination.py](scripts/reports/_1_r_risk_domination.py).
+It should take some time because of the high number of simulations results. Make
 sure that the appropriate experiences results exists. The one used in the paper
 are provided in [`experiences.zip`](data/experiences.zip).
 
@@ -64,7 +64,7 @@ pytest scripts/reports/causal_scores_evaluation.py
 Installation
 ============
 
-- We recommand the use of poetry and python>=3.9 to manage dependencies. 
+- We recommend the use of poetry and python>=3.9 to manage dependencies. 
 
 You can install caussim via 
 [poetry](https://python-poetry.org/):

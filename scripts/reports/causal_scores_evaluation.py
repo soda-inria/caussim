@@ -296,7 +296,7 @@ def test_report_causal_scores_evaluation(
                         0,
                         0.92,
                         s=f"{METRIC_OF_INTEREST_LABELS[quantiles_direction]}: {bin_min:.2f}-{bin_max:.2f}",
-                        transform=plt.gcf().transFigure,
+                        transform=plt.gcf().transFigure,# type: ignore
                         fontsize=20,
                     )
                     xmin = np.percentile(rankings_agg_by_bin[metric_of_interest], 5)

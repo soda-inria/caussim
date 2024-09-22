@@ -18,7 +18,7 @@ from caussim.pdistances.mmd import mmd_rbf, total_variation_distance
 from caussim.config import DIR2CACHE, DIR2EXPES
 from caussim.estimation.estimators import SLEARNER_LABEL, set_meta_learner
 from caussim.data.simulations import CausalSimulator, get_transformed_space_from_simu
-from joblib import Memory
+from joblib import Memory, Parallel, delayed
 
 memory = Memory(DIR2CACHE, verbose=0)
 
@@ -127,36 +127,36 @@ def consolidate_xps(xp_name: str, xp_save: str = None):
     xp_type = xp_path.parent.stem
     xp_name = xp_path.stem
     dir2expe = DIR2EXPES / xp_type / xp_name
+    dir2save_type = DIR2EXPES / f"{xp_type}_save"
+    dir2save_type.mkdir(exist_ok=True, parents=True)
+    
     if xp_save is None:
-        dir2save = DIR2EXPES / f"{xp_type}_save" / xp_name
+        dir2save = dir2save_type / (xp_name + ".parquet")
     else:
         dir2save = Path(xp_save)
-    dir2save.mkdir(exist_ok=True, parents=True)
 
     # Save simulation configuration
     if (dir2expe / "simu.yaml").exists():
         with open(dir2expe / "simu.yaml", "r") as f:
             simu_config = yaml.load(f, yaml.FullLoader)
-        with open(dir2save / "simu.yaml", "w") as f:
-            yaml.dump(simu_config, f)
-    elif (dir2expe / "simu.pkl").exists():
-        with open(dir2expe / "simu.pkl", "rb") as f:
-            simu_config = pickle.load(f)
-        with open(dir2save / "simu.pkl", "wb") as f:
-            pickle.dump(simu_config, f)
+        logging.info(f"Configuration: {simu_config}")
     else:
         logging.warning("No configuration file found.")
+    
     run_csvs = [f for f in list(dir2expe.iterdir()) if f.suffix == ".csv"]
     print("reading at {}".format(str(dir2expe)))
-    run_logs = pd.concat([pd.read_csv(f) for f in run_csvs], axis=0)
-    run_logs["run_id"] = [f.stem for f in run_csvs]
-
-    if (dir2save / "run_logs.csv").is_file():
-        previous_df = pd.read_csv(dir2save / "run_logs.csv")
-        new_df = pd.concat([previous_df, run_logs], axis=0)
-        new_df.to_csv(dir2save / "run_logs.csv", index=False)
+    run_logs = Parallel(n_jobs=-1)(delayed(pd.read_csv)(f) for f in run_csvs)
+    for log_, f in zip(run_logs, run_csvs):
+        log_["run_id"] = f.stem
+    run_logs_concat = pd.concat(run_logs, axis=0)
+    if (dir2save.exists() and (xp_save is not None)):
+        previous_df = pd.read_parquet(dir2save)
+        new_df = pd.concat([previous_df, run_logs_concat], axis=0)
+        new_df.to_parquet(dir2save, index=False)
     else:
-        run_logs.to_csv(dir2save / "run_logs.csv", index=False)
+        run_logs_concat.to_parquet(dir2save, index=False)
+
+
 
 
 def compute_w_slurm(func, list_parameters: List[Dict], n_cpus: int = 40):

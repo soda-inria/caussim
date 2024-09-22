@@ -4,8 +4,7 @@ import re
 from typing import Dict, List, Union
 from pathlib import Path
 from typing import Tuple
-from joblib import Parallel
-from sklearn.utils.fixes import delayed
+from joblib import Parallel, delayed
 
 from matplotlib import pyplot as plt
 
@@ -28,7 +27,6 @@ from caussim.config import DIR2FIGURES, TAB_COLORS, DIR2CACHE
 from scipy.stats import kendalltau
 from tqdm import tqdm
 
-
 from joblib.memory import Memory
 
 memory = Memory(DIR2CACHE, verbose=0)
@@ -38,7 +36,7 @@ Report utils
 """
 
 
-def read_logs(xp_name: Path) -> Tuple[pd.DataFrame, dict]:
+def read_logs(xp_name: Path, fformat="parquet") -> Tuple[pd.DataFrame, dict]:
     """Read results from a causal score evaluation experience.
 
     Parameters
@@ -54,7 +52,10 @@ def read_logs(xp_name: Path) -> Tuple[pd.DataFrame, dict]:
     xp_type = xp_name.parent.stem
     dir2save = DIR2EXPES / xp_type / xp_name
 
-    run_logs = pd.read_csv(dir2save / "run_logs.csv")
+    if fformat == "parquet":
+        run_logs = pd.read_parquet(dir2save)
+    else:
+        run_logs = pd.read_csv(dir2save / "run_logs.csv")
     if (dir2save / "simu.yaml").exists():
         with open(dir2save / "simu.yaml", "r") as f:
             simu_config = yaml.load(f, yaml.FullLoader)
@@ -101,6 +102,7 @@ def read_logs(xp_name: Path) -> Tuple[pd.DataFrame, dict]:
             run_logs["heterogeneity_score"]
         ) / np.abs(run_logs["ate"])
     return run_logs, simu_config
+
 
 
 def get_global_agreement_w_tau_risk(comparison_df_w_best_as_oracle: pd.DataFrame):

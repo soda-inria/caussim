@@ -26,7 +26,7 @@ from caussim.config import (
     LABEL_MAPPING,
     TAB_COLORS,
 )
-from caussim.reports.utils import kendalltau_stats, get_rankings_aggregate, get_metric_rankings_by_dataset
+from caussim.reports.utils import kendalltau_stats, get_rankings_aggregate, get_metric_rankings_by_dataset, get_expe_indices, get_candidate_params
 
 """
 Plot utils for reports
@@ -34,47 +34,54 @@ Plot utils for reports
 
 CAUSAL_METRICS = [
     "mu_risk",
-    "oracle_mu_iptw_risk",
     "mu_iptw_risk",
+    "oracle_mu_iptw_risk",
+    "w_risk",
+    "oracle_w_risk",
+    "u_risk",
+    "oracle_u_risk",
     # "mu_ipw_iht_risk",
     # "mu_ipw_n_risk",
-    "oracle_r_risk",
     # "oracle_r_risk_ipw",
     # "oracle_r_risk_IS2",
     "r_risk",
+    "oracle_r_risk",
     # "r_risk_gold_e",
     # "r_risk_gold_m",
     # "r_risk_ipw",
     # "r_risk_IS2",
-    "u_risk",
-    "oracle_u_risk",
-    "w_risk",
-    "oracle_w_risk",
     "tau_risk",
 ]
+METRIC_TYPE = "Type of metric"
+SEMI_ORACLE_LABEL = "Semi-oracle"
+FEASIBLE_LABEL = "Feasible"
+ORACLE_PALETTE = {
+    SEMI_ORACLE_LABEL: "lightgrey",
+    FEASIBLE_LABEL: "dimgray",
+}
 
 CAUSAL_METRIC_LABELS = {
-    "mu_risk": r"$\widehat{\mu\mathrm{-risk}}(f)$",
-    "oracle_mu_iptw_risk": r"$\widehat{\mu\mathrm{-risk}^*}_{IPW}(f)$",
-    "mu_iptw_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW}(f)$",
-    # "mu_itw_iht_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW-IHT}(f)$",
-    "mu_ipw_n_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW-N}(f)$",
-    "oracle_r_risk": r"$\widehat{\mathrm{R-risk}}^*(f)$",
-    "oracle_r_risk_IS2": r"$\widehat{\mathrm{R-risk}}_{IS2}^*(f)$",
-    "r_risk": r"$\widehat{\mathrm{R-risk}}(f)$",
-    "r_risk_gold_e": r"$\widehat{\mathrm{R-risk}}_{e^*, m}(f)$",
-    "r_risk_gold_m": r"$\widehat{\mathrm{R-risk}}_{e, m^*}(f)$",
-    "oracle_r_risk_ipw": r"$\widehat{\mathrm{R-risk}}_{IPW^*}(f)$",
-    "r_risk_ipw": r"$\widehat{\mathrm{R-risk}}_{IPW}(f)$",
-    "r_risk_IS2": r"$\widehat{\mathrm{R-risk}}_{IS2}(f)$",
+    "mu_risk": r"$\widehat{\mu\mathrm{-risk}}$",
+    "oracle_mu_iptw_risk": r"$\widehat{\mu\mathrm{-risk}}^{*}_{IPW}$",
+    "mu_iptw_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW}$",
+    # "mu_itw_iht_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW-IHT}$",
+    "mu_ipw_n_risk": r"$\widehat{\mu\mathrm{-risk}}_{IPW-N}$",
+    "oracle_r_risk": r"$\widehat{\mathrm{R-risk}}^{*}$",
+    "oracle_r_risk_IS2": r"$\widehat{\mathrm{R-risk}}_{IS2}^{*}$",
+    "r_risk": r"$\widehat{\mathrm{R-risk}}$",
+    "r_risk_gold_e": r"$\widehat{\mathrm{R-risk}}_{e^*, m}$",
+    "r_risk_gold_m": r"$\widehat{\mathrm{R-risk}}_{e, m^*}$",
+    "oracle_r_risk_ipw": r"$\widehat{\mathrm{R-risk}}^{*}_{IPW}$",
+    "r_risk_ipw": r"$\widehat{\mathrm{R-risk}}_{IPW}$",
+    "r_risk_IS2": r"$\widehat{\mathrm{R-risk}}_{IS2}$",
     "mse_ate": r"$(\tau - \hat \tau)^2$",
-    "tau_risk": r"$\widehat{\tau\mathrm{-risk}}(f)$",
-    "oracle_upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*}(w, f) - \widehat{tau\mathrm{-risk}}(f) - 4 \sigma_{Bayes}^2$",
-    "upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*}(w, f) - \widehat{tau\mathrm{-risk}}(f)$",
-    "oracle_u_risk": r"$\widehat{\mathrm{U-risk}}(f)$",
-    "u_risk": r"$\widehat{\mathrm{U-risk}}(f)$",
-    "oracle_w_risk": r"$\widehat{\mathrm{W-risk}}(f)$",
-    "w_risk": r"$\widehat{\mathrm{W-risk}}(f)$",
+    "tau_risk": r"$\widehat{\tau\mathrm{-risk}}$",
+    "oracle_upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*} - \widehat{tau\mathrm{-risk}} - 4 \sigma_{Bayes}^2$",
+    "upper_bound": r"$2\widehat{\mu\mathrm{-risk}}_{IPW^*} - \widehat{tau\mathrm{-risk}}$",
+    "oracle_u_risk": r"$\widehat{\mathrm{U-risk}}^{*}$",
+    "u_risk": r"$\widehat{\mathrm{U-risk}}$",
+    "oracle_w_risk": r"$\widehat{\tau\mathrm{-risk}}_{IPW}^{*}$",
+    "w_risk": r"$\widehat{\tau\mathrm{-risk}}_{IPW}$",
 }
 EVALUATION_METRIC_LABELS = {
     "normalized_abs_bias_ate": r"$|\frac{\tau - \tau_{\hat f^*_{\mathcal{M}}}}{\tau}|$",
@@ -84,12 +91,15 @@ EVALUATION_METRIC_LABELS = {
     "bias_tau_risk_to_best_method": r"""$log \tau \mathrm{Risk}(f^*_{\tau \mathrm{Risk}}) - \tau \mathrm{Risk}(f^*_{\ell})$""",
     "kendalltau_stats": r"""Kendall rank correlation 
     $\kappa (\ell, \tau\mathrm{-Risk})$""",
-    "kendalltau_stats__ref_oracle_r_risk": r"""$\kappa (\ell, \tau\mathrm{-Risk}) - \kappa(\widehat{R\mathrm{-risk}}^*(f), \tau\mathrm{-Risk})$""",
-    "kendalltau_stats__ref_r_risk": r"""$\kappa (\ell, \tau\mathrm{{-Risk}}) -
-                                     \kappa(\widehat{\mathrm{R-risk}}(f),
-                                     \tau\mathrm{{-Risk}})$""",
+    "kendalltau_stats_r_risk_only": r"Kendall rank correlation $\kappa (R\mathrm{-Risk}), \tau\mathrm{-Risk})$",
+    "kendalltau_stats__ref_oracle_r_risk": r"$\kappa (\ell,\tau\mathrm{-Risk}) - \kappa(\widehat{R\mathrm{-risk}}^*, \tau\mathrm{-Risk})$",
+     "kendalltau_stats__ref_oracle_r_risk_long": r"$\kappa (\ell, \tau\mathrm{-Risk}) - \kappa(\widehat{R\mathrm{-risk}}^*, \tau\mathrm{-Risk})$""",
+     "kendalltau_stats__r_risk__ref_oracle_r_risk_long": r"""Relative Kendall to semi-oracle $\widehat{R\mathrm{-risk}}^*$""",# $\kappa (\widehat{R\mathrm{-risk}}, \tau\mathrm{-Risk}) - \kappa(\widehat{R\mathrm{-risk}}^*, \tau\mathrm{-Risk})$
+    "kendalltau_stats__ref_r_risk": r"$\kappa (\ell, \tau\mathrm{{-Risk}}) - \kappa(\widehat{\mathrm{R-risk}}, \tau\mathrm{{-Risk}})$",
     "kendalltau_stats__ref_mean_risks": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$",
-    "kendalltau_stats__ref_mean_risks_long": r"Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$ compared to the mean over all metrics Kendall's"
+    "kendalltau_stats__ref_mean_risks_long": r"""Relative $\kappa(\ell,\tau\mathrm{{-Risk}})$ compared to mean over all metrics Kendall's""",
+    "validation_ate": r"$\tau_{\mathcal{V}}$",
+    "ate": r"$\tau_{\mathcal{S}}$",
 }
 
 METRIC_PALETTE = {
@@ -111,6 +121,27 @@ METRIC_PALETTE = {
     #CAUSAL_METRIC_LABELS["oracle_r_risk_IS2"]: TAB_COLORS[9],
     CAUSAL_METRIC_LABELS["tau_risk"]: TAB_COLORS[6],
 }
+
+METRIC_PALETTE_BOX_PLOTS = {
+    CAUSAL_METRIC_LABELS["mu_risk"]: TAB_COLORS[10],
+    CAUSAL_METRIC_LABELS["mu_iptw_risk"]: TAB_COLORS[0],
+    CAUSAL_METRIC_LABELS["mu_ipw_n_risk"]: TAB_COLORS[18],
+    CAUSAL_METRIC_LABELS["r_risk"]: TAB_COLORS[2],
+    CAUSAL_METRIC_LABELS["u_risk"]: TAB_COLORS[4],
+    CAUSAL_METRIC_LABELS["w_risk"]: TAB_COLORS[8],
+    CAUSAL_METRIC_LABELS["r_risk_gold_e"]: TAB_COLORS[16],
+    CAUSAL_METRIC_LABELS["r_risk_gold_m"]: TAB_COLORS[7],
+    #CAUSAL_METRIC_LABELS["r_risk_ipw"]: TAB_COLORS[4],
+    #CAUSAL_METRIC_LABELS["r_risk_IS2"]: TAB_COLORS[8],
+    CAUSAL_METRIC_LABELS["oracle_mu_iptw_risk"]: TAB_COLORS[1],
+    CAUSAL_METRIC_LABELS["oracle_r_risk"]: TAB_COLORS[3],
+    CAUSAL_METRIC_LABELS["oracle_u_risk"]: TAB_COLORS[5],
+    CAUSAL_METRIC_LABELS["oracle_w_risk"]: TAB_COLORS[9],
+    #CAUSAL_METRIC_LABELS["oracle_r_risk_ipw"]: TAB_COLORS[5],
+    #CAUSAL_METRIC_LABELS["oracle_r_risk_IS2"]: TAB_COLORS[9],
+    CAUSAL_METRIC_LABELS["tau_risk"]: TAB_COLORS[6],
+}
+
 METRIC_LS = {}
 for metric in CAUSAL_METRICS:
     oracle_regex = metric.startswith("oracle") | (metric == "tau_risk")
@@ -150,6 +181,7 @@ METRIC_OF_INTEREST_LABELS = {
     "treatment_heterogeneity": r"$std(\tau)$",
     "heterogeneity_score": r"$\mathcal{H}$",
     "heterogeneity_score_norm": r"$\mathcal{H}/|ATE|$",
+    "effect_ratio": r"$\frac{1}{N} \sum_{i=1}^N | \frac{\mu_{1}(x_i) - \mu_{0}(x_i)}{\mu_{0}(x_i)}|$",
 }
 
 ORACLE_METRIC_NAMES = [
@@ -163,21 +195,70 @@ FEASIBLE_METRIC_NAMES = [
     metric for metric in CAUSAL_METRICS if metric not in ORACLE_METRIC_NAMES
 ]
 
-N_FOUND_ORDER = [
-    "random",
+METRIC_ORDER = [
     "mu_risk",
     "mu_iptw_risk",
-    "mu_ipw_n_risk",
     "oracle_mu_iptw_risk",
+    "w_risk",
+    "oracle_w_risk",
+    "u_risk",
+    "oracle_u_risk",
     "r_risk",
-    "r_risk_gold_e",
-    "r_risk_gold_m",
-    "r_risk_ipw",
-    "oracle_r_risk_ipw",
     "oracle_r_risk",
-    "tau_risk",
 ]
 
+# Labels for the boxplots
+OVERLAP_BIN_COL = "Overlap"
+OVERLAP_BIN_LABELS = ["Strong Overlap", "Medium Overlap", "Weak Overlap"]
+OVERLAP_BIN_PALETTE = dict(zip(
+    OVERLAP_BIN_LABELS, sns.color_palette("YlOrRd", n_colors=len(OVERLAP_BIN_LABELS))))
+EFFECT_RATIO_BIN_COL = "Causal effect ratio"
+EFFECT_RATIO_BIN_LABELS = ["Low", "Medium", "High"]
+EFFECT_RATIO_BIN_PALETTE = dict(zip(
+    EFFECT_RATIO_BIN_LABELS, sns.color_palette("YlOrRd", n_colors=len(EFFECT_RATIO_BIN_LABELS))))
+
+METRIC_LABEL = "Metric"
+NUISANCE_LABEL = "Nuisance models"
+LINEAR_NUISANCES_LABEL = "Linear"
+RFOREST_NUISANCES_LABEL = "Forests"
+BOOSTING_NUISANCES_LABEL = "Boosting"
+STACKED_NUISANCES_LABEL = "Stacked"
+NUISANCE_PALETTE = {
+    LINEAR_NUISANCES_LABEL:TAB_COLORS[4], 
+    STACKED_NUISANCES_LABEL:TAB_COLORS[8],
+    RFOREST_NUISANCES_LABEL: TAB_COLORS[6],
+    BOOSTING_NUISANCES_LABEL: TAB_COLORS[10],
+}
+
+SHARED_SET_LABEL = "Shared sets"
+SEPARATED_SET_LABEL = "Separated sets"
+PROCEDURE_LABEL = "Training procedure"
+PROCEDURE_PALETTE = {
+    SHARED_SET_LABEL: TAB_COLORS[0],
+    SEPARATED_SET_LABEL: TAB_COLORS[2]
+}
+
+DATASET_LABEL = "Dataset"
+CAUSSIM_LABEL = "Caussim\n (N=5 000)"
+ACIC_16_LABEL = "ACIC 2016\n (N=4 802)"
+ACIC_18_LABEL = "ACIC 2018 \n (N=5 000)"
+TWINS_LABEL = "Twins \n (N= 11 984)"
+TWINS_DS_LABEL = "Twins downsampled\n (N=4 794)"
+
+MAP_DATASET_LABEL = {
+    "caussim": CAUSSIM_LABEL,
+    "acic_2016": ACIC_16_LABEL,
+    "acic_2018": ACIC_18_LABEL,
+    "twins": TWINS_LABEL,
+}
+
+DATASETS_PALETTE = {
+    TWINS_LABEL: TAB_COLORS[18],
+    TWINS_DS_LABEL: TAB_COLORS[19],   
+    ACIC_16_LABEL: TAB_COLORS[7],
+    CAUSSIM_LABEL: TAB_COLORS[16],
+    ACIC_18_LABEL: TAB_COLORS[9],
+}
 
 def plot_evaluation_metric(
     comparison_df_w_best_as_oracle: pd.DataFrame,
@@ -478,96 +559,74 @@ def plot_ranking_aggregation(
 def plot_metric_rankings_by_overlap_bin(
     expe_results: Dict[str, pd.DataFrame],
     reference_metric: str,
-    expe_indices: List[str],
     expe_causal_metrics: List[str],
-    candidate_params: List[str],
-    overlap_measure: str,
     comparison_label: str,
-    plot_middle_bin: bool = False,
+    plot_middle_overlap_bin: bool = False,
 ):
+    """Box plot of the ranking of the causal metrics for each overlap bin.
+    - the hue is defined by the user in the keys of the expe_results,
+    - the x axis is the evaluation metric (kendall's tau)
+    - the y axis is either "metric" or "dataset_name" if there is only one metric
+      selected.
+
+    Parameters
+    ----------
+    expe_results : Dict[str, pd.DataFrame]
+        _description_
+    reference_metric : str
+        _description_
+    expe_causal_metrics : List[str]
+        _description_
+    comparison_label : str
+        _description_
+    plot_middle_overlap_bin : bool, optional
+        _description_, by default False
+    y_axis : str, optional
+        _description_, by default "metric"
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
     aggregation_f_name = kendalltau_stats.__name__
     binned_results = []
+    
     for xp_name, xp_res in expe_results.items():
-        expe_rankings = get_metric_rankings_by_dataset(
-            expe_results=xp_res,
-            expe_indices=expe_indices,
-            causal_metrics=expe_causal_metrics,
-            candidate_params=candidate_params,
+        kendall_by_overlap_bin, evaluation_metric = get_kendall_by_overlap_bin(
+            xp_res=xp_res,
+            expe_causal_metrics=expe_causal_metrics,
+            reference_metric=reference_metric,
+            plot_middle_overlap_bin=plot_middle_overlap_bin,
         )
-
-        rankings_agg = get_rankings_aggregate(
-            expe_rankings=expe_rankings,
-            expe_indices=expe_indices,
-            causal_metrics=expe_causal_metrics,
-        )
-
-        rankings_matches = [
-            re.search(f"{aggregation_f_name}__tau_risk_(.*)", col)
-            for col in rankings_agg.columns
-        ]
-        selection_metrics = [
-            reg_match.group(1) for reg_match in rankings_matches if reg_match is not None
-        ]
-        rankings_name = [
-            reg_match.group(0) for reg_match in rankings_matches if reg_match is not None
-        ]
-        if reference_metric is not None:
-            reference_ranking_name = f"{aggregation_f_name}__tau_risk_{reference_metric}"
-            if reference_metric in selection_metrics:
-                selection_metrics.remove(reference_metric)
-                rankings_name.remove(reference_ranking_name)
-            elif reference_metric == "mean_risks":
-                rankings_agg[reference_ranking_name] = rankings_agg[rankings_name].mean(axis=1)
-            else: 
-                raise ValueError(f"reference_metric should be in {selection_metrics} or 'mean_risks', got {reference_metric}")
-                
-            for ranking_ in rankings_name:
-                rankings_agg[ranking_] = (
-                    rankings_agg[ranking_]
-                    - rankings_agg[reference_ranking_name]
-                )
-            evaluation_metric = aggregation_f_name + "__ref_" + reference_metric
-        else:
-            evaluation_metric = aggregation_f_name
-        var_name = "Metrics"
-        rankings_aggregation_melted = rankings_agg.melt(
-            id_vars=expe_indices,
-            value_vars=rankings_name,
-            var_name=var_name,
-            value_name=evaluation_metric,
-        )
-        # shape = n_experiences x n_causal_metrics
-        bins_quantiles = [0,0.33, 0.66, 1]
-        bins_values = rankings_aggregation_melted[overlap_measure].quantile(bins_quantiles).values
-        #bins_labels = [f"{b_low:.2f}-{b_sup:.2f}" for b_low, b_sup in
-        #zip(bins_values[:-1], bins_values[1:])]
-        bins_labels = ["Strong Overlap", "Medium Overlap", "Weak Overlap"]
-        overlap_bin_label = "overlap_bin"
-        rankings_aggregation_melted[overlap_bin_label] = pd.cut(rankings_aggregation_melted[overlap_measure], bins=bins_values, labels=bins_labels).astype(str)
-        rankings_aggregation_melted[comparison_label] = xp_name
-        binned_results.append(rankings_aggregation_melted)
+        kendall_by_overlap_bin[comparison_label] = xp_name
+        binned_results.append(kendall_by_overlap_bin)
     binned_results_df = pd.concat(binned_results, axis=0)
-    # keep only extrem tertiles
-    binned_results_df = binned_results_df.loc[
-        binned_results_df[overlap_bin_label].isin(
-            [bins_labels[0], bins_labels[1], bins_labels[2]])
-            ]
-    binned_results_df[var_name] = binned_results_df[var_name].apply(
-        lambda x: CAUSAL_METRIC_LABELS[re.sub(f"{aggregation_f_name}__tau_risk_", "", x)]
-    )
-    if plot_middle_bin:
-        col_order = [bins_labels[0], bins_labels[1], bins_labels[2]]
+    if plot_middle_overlap_bin:
+        col_order = [OVERLAP_BIN_LABELS[0], OVERLAP_BIN_LABELS[1], OVERLAP_BIN_LABELS[2]]
     else:
-        col_order = [bins_labels[0], bins_labels[2]]
+        col_order = [OVERLAP_BIN_LABELS[0], OVERLAP_BIN_LABELS[2]]
+    if comparison_label == NUISANCE_LABEL:
+        palette=NUISANCE_PALETTE
+    elif comparison_label == PROCEDURE_LABEL:
+        palette = PROCEDURE_PALETTE
+    metric_order = [CAUSAL_METRIC_LABELS[metric_label_] for metric_label_ in METRIC_ORDER if CAUSAL_METRIC_LABELS[metric_label_] in binned_results_df[METRIC_LABEL].unique()]
     g = sns.catplot(
         data=binned_results_df,
         x=evaluation_metric,
-        y=var_name,
+        y=METRIC_LABEL,
+        order=metric_order,
         hue=comparison_label,
-        col=overlap_bin_label, 
+        col=OVERLAP_BIN_COL, 
         aspect=1.2,
         height=10,
         kind="box",
+        palette=palette,
         col_order=col_order
     )
     # Aesthetics
@@ -576,6 +635,109 @@ def plot_metric_rankings_by_overlap_bin(
     #g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric], y=0.04)
     g.fig.suptitle(EVALUATION_METRIC_LABELS[evaluation_metric+"_long"], y=0.04)
     return g
+
+def get_kendall_by_overlap_bin(
+    xp_res: pd.DataFrame,
+    expe_causal_metrics: List[str],
+    reference_metric: str = None,
+    plot_middle_overlap_bin: bool =True
+) -> Tuple[pd.DataFrame, str]:
+    """Group by overlap bin a kendall with reference to the kendall of a given metric 
+
+    Parameters
+    ----------
+    xp_res : pd.DataFrame
+        _description_
+    reference_metric : str
+        _description_
+    expe_causal_metrics : List[str]
+        _description_
+    plot_middle_overlap_bin : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
+    aggregation_f_name = kendalltau_stats.__name__
+    candidate_params = get_candidate_params(xp_res)
+    overlap_measure, expe_indices = get_expe_indices(xp_res)
+    expe_rankings = get_metric_rankings_by_dataset(
+        expe_results=xp_res,
+        expe_indices=expe_indices,
+        causal_metrics=expe_causal_metrics,
+        candidate_params=candidate_params,
+    )
+
+    rankings_agg = get_rankings_aggregate(
+        expe_rankings=expe_rankings,
+        expe_indices=expe_indices,
+        causal_metrics=expe_causal_metrics,
+    )
+
+    rankings_matches = [
+        re.search(f"{aggregation_f_name}__tau_risk_(.*)", col)
+        for col in rankings_agg.columns
+    ]
+    selection_metrics = [
+        reg_match.group(1) for reg_match in rankings_matches if reg_match is not None
+    ]
+    rankings_name = [
+        reg_match.group(0) for reg_match in rankings_matches if reg_match is not None
+    ]
+    
+    if reference_metric is not None:
+        reference_ranking_name = f"{aggregation_f_name}__tau_risk_{reference_metric}"
+        if reference_metric in selection_metrics:
+            selection_metrics.remove(reference_metric)
+            rankings_name.remove(reference_ranking_name)
+        elif reference_metric == "mean_risks":
+            rankings_agg[reference_ranking_name] = rankings_agg[rankings_name].mean(axis=1)
+        else: 
+            raise ValueError(f"reference_metric should be in {selection_metrics} or 'mean_risks', got {reference_metric}")
+            
+        for ranking_ in rankings_name:
+            rankings_agg[ranking_] = (
+                rankings_agg[ranking_]
+                - rankings_agg[reference_ranking_name]
+            )
+        evaluation_metric = aggregation_f_name + "__ref_" + reference_metric
+    else:
+        evaluation_metric = aggregation_f_name
+    rankings_aggregation_melted = rankings_agg.melt(
+        id_vars=expe_indices,
+        value_vars=rankings_name,
+        var_name=METRIC_LABEL,
+        value_name=evaluation_metric,
+    )
+    # shape = n_experiences x n_causal_metrics
+    bins_quantiles = [0,0.33, 0.66, 1]
+    bins_values = rankings_aggregation_melted[overlap_measure].quantile(bins_quantiles).values
+    #bins_labels = [f"{b_low:.2f}-{b_sup:.2f}" for b_low, b_sup in
+    #zip(bins_values[:-1], bins_values[1:])]
+    rankings_aggregation_melted[OVERLAP_BIN_COL] = pd.cut(rankings_aggregation_melted[overlap_measure], bins=bins_values, labels=OVERLAP_BIN_LABELS).astype(str)
+    # keep only extrem tertiles
+    if plot_middle_overlap_bin:
+        kept_bins = [OVERLAP_BIN_LABELS[0], OVERLAP_BIN_LABELS[1], OVERLAP_BIN_LABELS[2]]
+    else:
+        kept_bins = [OVERLAP_BIN_LABELS[0], OVERLAP_BIN_LABELS[2]]
+    rankings_aggregation_melted = rankings_aggregation_melted.loc[
+        rankings_aggregation_melted[OVERLAP_BIN_COL].isin(kept_bins)]
+    # adding type of metrics: feasible vs. semi-oracle
+    rankings_aggregation_melted[METRIC_TYPE] = rankings_aggregation_melted[METRIC_LABEL].apply(
+        lambda x: SEMI_ORACLE_LABEL if (re.search("oracle", x) is not None) else FEASIBLE_LABEL
+    )
+    rankings_aggregation_melted[METRIC_LABEL] = rankings_aggregation_melted[METRIC_LABEL].apply(
+        lambda x: CAUSAL_METRIC_LABELS[re.sub(f"{aggregation_f_name}__tau_risk_", "", x)]
+    )
+    return rankings_aggregation_melted, evaluation_metric
+
 
 def get_selection_legend(metrics, subtitles=True):
     oracle_metrics_subset = [
@@ -631,31 +793,50 @@ def get_selection_legend(metrics, subtitles=True):
         ]
     return selection_legend_handles, selection_legend_labels
 
-
-def plot_metric_legend(metrics):
+def plot_metric_legend(metrics:List[str], include_tau_risk:bool=False, ncol:int=2):
+    
     oracle_metrics = [
         m for m in metrics if re.search("oracle|gold|tau_risk", m) is not None
     ]
+    if not include_tau_risk:
+        oracle_metrics = [m for m in oracle_metrics if m != "tau_risk"]
     feasible_metrics = [
         m for m in metrics if re.search("oracle|gold|tau_risk", m) is None
     ]
 
     o_handles, o_labels = get_selection_legend(oracle_metrics, subtitles=False)
     f_handles, f_labels = get_selection_legend(feasible_metrics, subtitles=False)
-    fig, ax = plt.subplots(1, 1)#, figsize=(12, 1))
+    
+    if ncol == 1:
+        figsize=(6, 14)
+    else:
+        figsize=(11, 9)
+    fig, ax = plt.subplots(1, 1, figsize = figsize)
     # plt.title('Selection metrics', loc="center", ha='center', va='center')
+    oracle_title = "Semi-oracle"    
+    if "tau_risk" in oracle_metrics:
+        if ncol == 1:
+            oracle_title+= "\n and oracle"    
+        else: 
+            oracle_title = "oracle"
     ax.add_artist(
         plt.legend(
             o_handles,
             o_labels,
-            title="Semi-oracle and oracle",
-            bbox_to_anchor=(0, 0.3),
-            ncol=2,
+            title=oracle_title,
+            #bbox_to_anchor=(0, -0.5),
+            loc="upper left",
+            ncol=ncol,
         )
     )
     ax.add_artist(
         plt.legend(
-            f_handles, f_labels, title="Feasible", bbox_to_anchor=(1, 0.3), ncol=2
+            f_handles, 
+            f_labels, 
+            title="Feasible", 
+            #bbox_to_anchor=(0, 2), 
+            loc="lower left",
+            ncol=ncol
         )
     )
     ax.grid(False)
@@ -675,9 +856,9 @@ def create_legend_for_candidates(candidates_family, colormap = None):
     # get an approriate colormap
     if colormap is None:
         if len(candidates_family) <= 20:
-            colormap = [cm.tab20(i) for i in range(len(candidates_family))]
+            colormap = [cm.tab20(i) for i in range(len(candidates_family))] # type:ignore
         else:
-            colormap = plt.cm.get_cmap("viridis", len(candidates_family))
+            colormap = plt.cm.get_cmap("viridis", len(candidates_family)) # type:ignore
 
     candidates_colormap = {
         candidate_id: c for (candidate_id, c) in zip(candidates_family, colormap)
@@ -692,12 +873,12 @@ def create_legend_for_candidates(candidates_family, colormap = None):
                 [0],
                 color=candidates_colormap[candidate_id],
                 marker="o",
-                markersize=12,
+                markersize=15,
                 linestyle="None",
             )
         )
         model = "".join(candidate_id.split("__")[0])
-        model = model.replace("hist_gradient_boosting", "Boosted trees").capitalize()
+        model = model.replace("hist_gradient_boosting", "Boosted trees").replace("random_forest", "Forests").capitalize()
 
         metalearner = "".join(candidate_id.split("__")[1]).replace(
             "meta_learner_name_", ""
@@ -707,6 +888,9 @@ def create_legend_for_candidates(candidates_family, colormap = None):
             x for x in params if (x.find("nan") == -1 & x.find("final_estimator") == -1)
         ]
         # regex for smaller params names
+        float_regex = "(max_depth_[0-9]+)[.][0-9]"
+        params = [re.sub(float_regex, r"\1", x) for x in params]
+        params = [x.replace("max_depth", "max depth") for x in params]
         params = [x.replace("learning_rate", "learning rate") for x in params]
         params = [x.replace("alpha", "penalty") for x in params]
 
@@ -714,10 +898,11 @@ def create_legend_for_candidates(candidates_family, colormap = None):
         if model == "Boosted trees":
             labels.append(f"{model}, {' '.join(params)}")
         elif model == "Ridge":
+            params =[""]
             if metalearner == "SLearner":
-                labels.append(f"{model} wo. interaction, {' '.join(params)}")
+                labels.append(f"{model}")# wo. interaction{' '.join(params)}")
             else:
-                labels.append(f"{model} w. interaction, {' '.join(params)}")
+                labels.append(f"{model} w. interaction{' '.join(params)}")
         else:
             labels.append(f"{model}, {' '.join(params)}")
     return (handles, labels), candidates_colormap
@@ -834,7 +1019,7 @@ def plot_agreement_w_tau_risk(
             color="grey",
         )
         # Hide axes labels
-        plt.setp(ax_histx.get_xticklabels(), visible=False)
+        plt.setp(ax_histx.get_xticklabels(), visible=False)#type:ignore
     max_agreement = n_found_oracles_grouped_overlap["mean"].max()
     min_agreement = n_found_oracles_grouped_overlap["mean"].min()
 
@@ -999,6 +1184,35 @@ def plot_logit(sample: pd.DataFrame, fig, ax):
     return fig, ax
 
 
+def get_data_from_facetgrid_boxplot(data, x, y, hue, col, col_order, hue_order=None,  order=None) -> pd.DataFrame:
+    # if I want to bold extrem values: 
+    # https://flopska.com/highlighting-pandas-to_latex-output-in-bold-face-for-extreme-values.html
+    box_plot_df = data.groupby(
+        [col, y, hue]
+    ).agg(**{
+        "Median": pd.NamedAgg(column=x, aggfunc=lambda x: np.median(x)),
+        "q25": pd.NamedAgg(column=x, aggfunc=lambda x: np.quantile(x, 0.25)),
+        "q75": pd.NamedAgg(column=x, aggfunc=lambda x: np.quantile(x, 0.75)),
+    }).reset_index()
+    for colname, order_ in zip([hue, y, col], [hue_order, order, col_order]):
+        if order_ is not None:
+            box_plot_df[colname] = pd.Categorical(box_plot_df[colname], categories=order_, ordered=True)
+    sort_combined = [col, y, hue]
+    box_plot_df.sort_values(by=sort_combined, inplace=True)
+    box_plot_df["IQR"] = box_plot_df["q75"] - box_plot_df["q25"]
+    box_plot_df.drop(["q75", "q25"], axis=1, inplace=True)
+    full_table = []
+    for col_value in col_order:
+        col_table = box_plot_df.loc[box_plot_df[col] == col_value].drop(col, axis=1).set_index([y, hue])
+        full_table.append(col_table)
+    
+    box_plot_df_two_column = pd.concat(
+        full_table, keys=col_order, axis=1
+    ) 
+    return box_plot_df_two_column
+    
+    
+    
 def plot_overlap(
     sample: pd.DataFrame,
     overlap: str = "",
@@ -1043,8 +1257,8 @@ def plot_overlap(
         bins=100,
         common_norm=False,
     )
-    legend_handles = ax.legend_.legendHandles
-    legend_labels = [LABEL_MAPPING[float(txt.get_text())] for txt in ax.legend_.texts]
+    legend_handles = ax.legend_.legendHandles # type:ignore
+    legend_labels = [LABEL_MAPPING[float(txt.get_text())] for txt in ax.legend_.texts]# type:ignore
     plt.legend(
         legend_handles,
         legend_labels,
@@ -1074,3 +1288,166 @@ def plot_overlap(
             bbox_inches="tight",
         )
     return fig, ax
+
+
+def get_kendall_by_effect_ratio_bin(
+    xp_res: pd.DataFrame,
+    expe_causal_metrics: List[str],
+    reference_metric: str = None,
+    plot_middle_overlap_bin: bool =True
+) -> Tuple[pd.DataFrame, str]:
+    """Group by effect ratio bin a kendall with reference to the kendall of a given metric 
+
+    Parameters
+    ----------
+    xp_res : pd.DataFrame
+        _description_
+    reference_metric : str
+        _description_
+    expe_causal_metrics : List[str]
+        _description_
+    plot_middle_overlap_bin : bool, optional
+        _description_, by default True
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    ValueError
+        _description_
+    """
+    aggregation_f_name = kendalltau_stats.__name__
+    candidate_params = get_candidate_params(xp_res)
+    _, expe_indices = get_expe_indices(xp_res)
+    effect_ratio_measure = "effect_ratio"
+    expe_indices += [effect_ratio_measure]
+    
+    expe_rankings = get_metric_rankings_by_dataset(
+        expe_results=xp_res,
+        expe_indices=expe_indices,
+        causal_metrics=expe_causal_metrics,
+        candidate_params=candidate_params,
+    )
+
+    rankings_agg = get_rankings_aggregate(
+        expe_rankings=expe_rankings,
+        expe_indices=expe_indices,
+        causal_metrics=expe_causal_metrics,
+    )
+
+    rankings_matches = [
+        re.search(f"{aggregation_f_name}__tau_risk_(.*)", col)
+        for col in rankings_agg.columns
+    ]
+    selection_metrics = [
+        reg_match.group(1) for reg_match in rankings_matches if reg_match is not None
+    ]
+    rankings_name = [
+        reg_match.group(0) for reg_match in rankings_matches if reg_match is not None
+    ]
+    
+    if reference_metric is not None:
+        reference_ranking_name = f"{aggregation_f_name}__tau_risk_{reference_metric}"
+        if reference_metric in selection_metrics:
+            selection_metrics.remove(reference_metric)
+            rankings_name.remove(reference_ranking_name)
+        elif reference_metric == "mean_risks":
+            rankings_agg[reference_ranking_name] = rankings_agg[rankings_name].mean(axis=1)
+        else: 
+            raise ValueError(f"reference_metric should be in {selection_metrics} or 'mean_risks', got {reference_metric}")
+            
+        for ranking_ in rankings_name:
+            rankings_agg[ranking_] = (
+                rankings_agg[ranking_]
+                - rankings_agg[reference_ranking_name]
+            )
+        evaluation_metric = aggregation_f_name + "__ref_" + reference_metric
+    else:
+        evaluation_metric = aggregation_f_name
+    rankings_aggregation_melted = rankings_agg.melt(
+        id_vars=expe_indices,
+        value_vars=rankings_name,
+        var_name=METRIC_LABEL,
+        value_name=evaluation_metric,
+    )
+    # shape = n_experiences x n_causal_metrics
+    bins_quantiles = [0,0.33, 0.66, 1]
+    bins_values = rankings_aggregation_melted[effect_ratio_measure].quantile(bins_quantiles).values
+    #bins_labels = [f"{b_low:.2f}-{b_sup:.2f}" for b_low, b_sup in
+    #zip(bins_values[:-1], bins_values[1:])]
+    rankings_aggregation_melted[EFFECT_RATIO_BIN_COL] = pd.cut(rankings_aggregation_melted[effect_ratio_measure], bins=bins_values, labels=EFFECT_RATIO_BIN_LABELS).astype(str)
+    # keep only extrem tertiles
+    if plot_middle_overlap_bin:
+        kept_bins = [EFFECT_RATIO_BIN_LABELS[0], EFFECT_RATIO_BIN_LABELS[1], EFFECT_RATIO_BIN_LABELS[2]]
+    else:
+        kept_bins = [EFFECT_RATIO_BIN_LABELS[0], EFFECT_RATIO_BIN_LABELS[2]]
+    rankings_aggregation_melted = rankings_aggregation_melted.loc[
+        rankings_aggregation_melted[EFFECT_RATIO_BIN_COL].isin(kept_bins)]
+    # adding type of metrics: feasible vs. semi-oracle
+    rankings_aggregation_melted[METRIC_TYPE] = rankings_aggregation_melted[METRIC_LABEL].apply(
+        lambda x: SEMI_ORACLE_LABEL if (re.search("oracle", x) is not None) else FEASIBLE_LABEL
+    )
+    rankings_aggregation_melted[METRIC_LABEL] = rankings_aggregation_melted[METRIC_LABEL].apply(
+        lambda x: CAUSAL_METRIC_LABELS[re.sub(f"{aggregation_f_name}__tau_risk_", "", x)]
+    )
+    return rankings_aggregation_melted, evaluation_metric
+
+def plot_kendall_compare_vs_measure(
+    expe_results:  pd.DataFrame,
+    reference_metric: str,
+    expe_causal_metrics: List[str],
+    measure: str="overlap",
+    quantile: float = 0.5,
+    ylim_ranking: Tuple[float, float] = (-1.0, 1.0),
+    
+):
+    """Plot the kendall tau between the reference metric and the other metrics
+    vs the overlap. 
+
+    Parameters
+    ----------
+    expe_results : _type_
+        _description_
+    expe_indices : _type_
+        _description_
+    xp_causal_metrics : List[str]
+        _description_
+    candidate_params : List[str]
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+    """
+    candidate_params = get_candidate_params(expe_results)
+    measure, expe_indices = get_expe_indices(expe_results)
+    if measure == "effect_ratio":
+        expe_indices += [measure]
+        measure = "effect_ratio"
+    expe_rankings = get_metric_rankings_by_dataset(
+            expe_results=expe_results,
+            expe_indices=expe_indices,
+            causal_metrics=expe_causal_metrics,
+            candidate_params=candidate_params,
+        )
+
+    rankings_agg = get_rankings_aggregate(
+        expe_rankings=expe_rankings,
+        expe_indices=expe_indices,
+        causal_metrics=expe_causal_metrics,
+    )   
+    ax = plot_ranking_aggregation(
+        rankings_aggregation=rankings_agg,
+        expe_indices=expe_indices,
+        x_metric_name=measure,
+        lowess_type="lowess_quantile",
+        lowess_kwargs={"frac": 0.66, "it": 10, "quantile": quantile},
+        show_legend=False,
+        y_lim=ylim_ranking,
+        reference_metric=reference_metric,
+    )
+    return ax
