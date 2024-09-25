@@ -274,6 +274,10 @@ def test_plot_effect_ratio_difference(
         g.add_legend(
             title=EFFECT_RATIO_BIN_COL, 
             legend_data=legend_data,
+            loc="upper center",
+            ncol=3, bbox_to_anchor=(0.25, 1.15),
+            columnspacing=0.5,
+            prop={"size": 36},
         )        
     else:
         g._legend.remove()# type: ignore
