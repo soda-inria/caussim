@@ -42,7 +42,7 @@ from caussim.experiences.base_config import DATASET_GRID_FULL_EXPES
 DATASET_GRID = DATASET_GRID_FULL_EXPES
 ```
 
-📢 Note that the results of the section 5 are already provided in the zenodo link [`experiences.zip`]([data/experiences.zip](https://zenodo.org/records/13765465?token=eyJhbGciOiJIUzUxMiJ9.eyJpZCI6ImJmNTFlOWNjLTUxOTYtNGFjNS04YjVjLTIyZWFjMmNhZjQyMyIsImRhdGEiOnt9LCJyYW5kb20iOiJlOTZjZGE4ZmQzNDFkMWUxNTJhYzI0YWI1ZjUxNGViMyJ9.vPuJgBw0A0w02InS9ovWRShKUGTDk4w6k2uwYBZklRiC-p7hlVvZOOyvpg6wsJ6T5MBW30vUCsL_UdBSCmmFMw)).
+📢 Note that the results of the section 5 are already provided in the zenodo link [`experiences.zip`](https://zenodo.org/records/13765465).
 
 Reports
 -------
@@ -55,7 +55,7 @@ The main report type is a pytest function contained in the `reports/causal_score
 [scripts/reports/_1_r_risk_domination.py](scripts/reports/_1_r_risk_domination.py).
 It should take some time because of the high number of simulations results. Make
 sure that the appropriate experiences results exists. The one used in the paper
-are provided in [`experiences.zip`](data/experiences.zip).
+are provided in the zenodo link [`experiences.zip`](https://zenodo.org/records/13765465).
 
 ```
 pytest scripts/reports/causal_scores_evaluation.py
